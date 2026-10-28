@@ -53,7 +53,7 @@ window.__ModuleLoader__.load({
         ? window.__DSH_OPENING_SET__
         : [{ lang: 'zh', track: '', cue: FALLBACK_CUE }];
 
-    const CYCLE_KEY = 'dsh-opening:cycle';
+    const CYCLE_KEY = 'dsh-opening:cycle.v2';
 
     /** Each page load plays the next language of the set, so all of them get seen. */
     function pickSet() {

@@ -81,31 +81,51 @@ def seconds(block):
     return block.size / float(TARGET_RATE)
 
 
-NOTE_HZ = (1046.50, 1318.51, 1567.98)  # C6 - E6 - G6, rising major triad
-NOTE_AT = (0.10, 0.34, 0.58)
-MARK_AT = 1.02
+TOP_HZ = {"zh": 4000.0, "en": 4600.0, "ru": 4600.0}
+
+CHORDS = (
+    (110.00, 164.81, 261.63, 329.63),   # Am
+    (87.31, 174.61, 261.63, 349.23),    # F
+    (130.81, 196.00, 329.63, 392.00),   # C
+    (98.00, 146.83, 246.94, 293.66),    # G
+)
+
+NOTE_HZ = (1567.98, 1174.66, 1567.98, 1174.66)  # G6 / D6, a fourth apart
+NOTE_AT = (0.08, 0.31, 0.54, 0.77)
+MARK_AT = 1.10
 
 
-def chime(rate, freq, dur=0.55, decay=2.6, gain=0.30):
-    """A single clean chime: sine fundamental, two faint harmonics, glassy shimmer.
+def chime(rate, freq, dur=0.85, decay=3.1, gain=0.20):
+    """One water-drop bell: a rounded tone with a small downward glide.
 
-    The previous prompt sat at 987 Hz with 0.35 / 0.18 partials and a 0.20 s
-    tail, which read as a beeper. This one is an octave up, the partials are
-    much weaker, and the tail is longer and softer, so it reads as a struck
-    bell instead of an alarm.
+    Compared with the previous triad this is a softer, lower-level strike: the
+    fundamental is untouched, only the octave is added at 0.09 and it decays
+    twice as fast, and the ~1.8% pitch sag right after the strike is what makes
+    it read as a drop landing instead of a beep.
     """
     count = int(round(rate * dur))
     t = np.arange(count, dtype=np.float64) / rate
-    attack = np.minimum(1.0, t / 0.006)
-    vibrato = 0.10 * np.sin(2.0 * np.pi * 5.0 * t)
-    body = np.sin(2.0 * np.pi * freq * t + vibrato) * np.exp(-decay * t)
-    upper = 0.16 * np.sin(2.0 * np.pi * freq * 2.004 * t) * np.exp(-decay * 2.1 * t)
-    air = 0.04 * np.sin(2.0 * np.pi * freq * 3.008 * t) * np.exp(-decay * 3.4 * t)
-    return ((body + upper + air) * attack * gain).astype(np.float32)
+    attack = np.minimum(1.0, t / 0.010)
+    glide = 1.0 + 0.018 * np.exp(-t / 0.05)
+    phase = 2.0 * np.pi * freq * glide * t
+    body = np.sin(phase) * np.exp(-decay * t)
+    octave = 0.09 * np.sin(2.0 * phase) * np.exp(-decay * 2.2 * t)
+    return ((body + octave) * attack * gain).astype(np.float32)
 
 
-def chimes(rate, length, gain=0.30):
-    """Three rising notes laid into a lead-in of `length` seconds."""
+def water_swell(rate, length, level=0.010):
+    """A soft filtered-noise wash under the drops: water flowing, not hiss."""
+    rng = np.random.default_rng(7)
+    count = int(round(rate * length))
+    noise = rng.standard_normal(count).astype(np.float32)
+    shaped = make_samples.band_limit(noise, rate, 900.0, 3400.0)
+    t = np.arange(count, dtype=np.float64) / rate
+    env = np.clip(t / 0.40, 0.0, 1.0) * np.clip((length - t) / 1.20, 0.0, 1.0)
+    return (shaped * env * level).astype(np.float32)
+
+
+def chimes(rate, length, gain=0.20):
+    """Four alternating drops laid into a lead-in of `length` seconds."""
     buffer = np.zeros(int(round(rate * length)), dtype=np.float32)
     for freq, at in zip(NOTE_HZ, NOTE_AT):
         one = chime(rate, freq, gain=gain)
@@ -113,18 +133,7 @@ def chimes(rate, length, gain=0.30):
         stop = min(buffer.size, start + one.size)
         if stop > start:
             buffer[start:stop] += one[: stop - start]
-    return buffer
-
-
-TOP_HZ = {"zh": 4000.0, "en": 4600.0, "ru": 4600.0}
-
-# Four slow chords, one per 4.5 s of an 18 s sequence: Am - F - C - G.
-CHORDS = (
-    (110.00, 164.81, 261.63, 329.63),
-    (87.31, 174.61, 261.63, 349.23),
-    (130.81, 196.00, 329.63, 392.00),
-    (98.00, 146.83, 246.94, 293.66),
-)
+    return buffer + water_swell(rate, length)
 
 
 def split_salute(text, lang):
@@ -169,7 +178,7 @@ def music_bed(rate, length):
         start = int(round(rate * at))
         stop = min(total, start + count)
         if stop > start:
-            out[start:stop] += pluck[: stop - start] * 0.035
+            out[start:stop] += pluck[: stop - start] * 0.022
 
     bed = make_samples.band_limit(out.astype(np.float32), rate, 60.0, 2600.0)
     peak = float(np.max(np.abs(bed))) if bed.size else 0.0
@@ -305,7 +314,7 @@ def main(argv):
     total = seconds(track)
 
     bed = music_bed(TARGET_RATE, total)
-    track = track + 0.15 * duck_bed(track, bed, TARGET_RATE)
+    track = track + 0.10 * duck_bed(track, bed, TARGET_RATE)
 
     # On-screen labels are always the bilingual pair (Chinese lead, English
     # subtitles) so the same layout works no matter which track is playing.
@@ -345,7 +354,7 @@ def main(argv):
         "tail": round(TAIL, 3),
         "gaps": [round(gap, 3) for gap in gaps],
         "mark": {"at": mark_at, "dur": mark_dur},
-        "chimes": {"notes": list(NOTE_HZ), "at": list(NOTE_AT), "markAt": MARK_AT},
+        "chimes": {"notes": list(NOTE_HZ), "at": list(NOTE_AT), "markAt": MARK_AT, "kind": "water-drop"},
         "cues": cues,
     }
 
