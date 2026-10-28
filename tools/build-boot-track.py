@@ -81,7 +81,7 @@ def seconds(block):
     return block.size / float(TARGET_RATE)
 
 
-TOP_HZ = {"zh": 4000.0, "en": 4600.0, "ru": 4600.0}
+TOP_HZ = {"zh": 4000.0, "en": 4600.0, "ru": 4600.0, "ja": 5200.0}
 
 CHORDS = (
     (110.00, 164.81, 261.63, 329.63),   # Am
@@ -148,12 +148,15 @@ DISPLAY_STEPS = {
     "ru": ["Требуется Разрешение На Доступ", "Подтверждение Личности",
            "Запрос На Доступ Принят", "Начато Чтение Прав",
            "Чтение Завершено. Проверка Пройдена"],
+    "ja": ["アクセス許可が必要です", "ご身分の確認", "アクセス要求を承りました",
+           "権限の読み取りを開始", "読み取り完了 · 確認済み"],
 }
 
 DISPLAY_SALUTE = {
     "zh": "欢迎回来，指挥员",
     "en": "WELCOME BACK, COMMANDER",
     "ru": "ДОБРО ПОЖАЛОВАТЬ, ТОВАРИЩ",
+    "ja": "おかえりなさいませ、ご主人様",
 }
 
 
@@ -164,6 +167,11 @@ def split_salute(text, lang):
         parts = clean.replace("，", ",").split(",")
         if len(parts) >= 2:
             return [parts[0].strip() + "，", ",".join(parts[1:]).strip()]
+        return [clean, ""]
+    if lang == "ja":
+        cut = clean.rfind("、")
+        if cut > 0:
+            return [clean[: cut + 1], clean[cut + 1:].strip()]
         return [clean, ""]
     parts = clean.rsplit(" ", 1)
     if len(parts) == 2:
@@ -278,17 +286,23 @@ class Voice:
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Build one boot-sequence audio track.")
-    parser.add_argument("--lang", default="zh", choices=["zh", "en", "ru"])
+    parser.add_argument("--lang", default="zh", choices=["zh", "en", "ru", "ja"])
     parser.add_argument("--mech", type=float, default=0.6)
     parser.add_argument("--speed-zh", type=float, default=make_samples.SPEED["zh"])
     parser.add_argument("--speed-en", type=float, default=make_samples.SPEED["en"])
     parser.add_argument("--speed-ru", type=float, default=make_samples.SPEED["ru"])
+    parser.add_argument("--speed-ja", type=float, default=make_samples.SPEED["ja"])
     parser.add_argument("--ru-voice", default="baya")
     parser.add_argument("--target", type=float, default=18.0)
     parser.add_argument("--out", default=None)
     args = parser.parse_args(argv)
 
-    speed = {"zh": args.speed_zh, "en": args.speed_en, "ru": args.speed_ru}[args.lang]
+    speed = {
+        "zh": args.speed_zh,
+        "en": args.speed_en,
+        "ru": args.speed_ru,
+        "ja": args.speed_ja,
+    }[args.lang]
     out = args.out or os.path.join(ASSET_DIR, "boot-%s.wav" % args.lang)
     if not os.path.isdir(ASSET_DIR):
         os.makedirs(ASSET_DIR)
@@ -342,7 +356,7 @@ def main(argv):
     display = {}
     for index in range(5):
         display["step%d" % (index + 1)] = {
-            code: DISPLAY_STEPS[code][index] for code in ("zh", "en", "ru")
+            code: DISPLAY_STEPS[code][index] for code in ("zh", "en", "ru", "ja")
         }
 
     cues = []
@@ -360,7 +374,7 @@ def main(argv):
     for cue in cues:
         if cue["name"].startswith("step"):
             index = int(cue["name"][4:]) - 1
-            cue["text"] = {code: DISPLAY_STEPS[code][index] for code in ("zh", "en", "ru")}
+            cue["text"] = {code: DISPLAY_STEPS[code][index] for code in ("zh", "en", "ru", "ja")}
 
     timeline = {
         "lang": args.lang,

@@ -26,13 +26,13 @@ const outputFile = join(packageDir, 'client.js');
 
 const argv = process.argv.slice(2);
 const langFlag = argv.indexOf('--langs');
-const langs = (langFlag >= 0 ? argv[langFlag + 1] : 'zh,en,ru')
+const langs = (langFlag >= 0 ? argv[langFlag + 1] : 'zh,en,ru,ja')
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean);
 for (const lang of langs) {
-  if (!['zh', 'en', 'ru'].includes(lang)) {
-    console.error('unknown language ' + lang + ' (expected zh, en or ru)');
+  if (!['zh', 'en', 'ru', 'ja'].includes(lang)) {
+    console.error('unknown language ' + lang + ' (expected zh, en, ru or ja)');
     process.exit(1);
   }
 }

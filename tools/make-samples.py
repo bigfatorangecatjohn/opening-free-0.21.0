@@ -25,6 +25,7 @@ Output lands in samples\\:
 import argparse
 import os
 import sys
+import types
 import wave
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,7 +39,16 @@ GAP_SECONDS = 0.45
 
 # Delivery speed per language. The operator asked for the Chinese voice at
 # 1.15x; the other two stay natural until he says otherwise.
-SPEED = {"zh": 1.15, "en": 1.0, "ru": 1.0}
+SPEED = {"zh": 1.15, "en": 1.0, "ru": 1.0, "ja": 1.12}
+
+# misaki's Japanese front-end imports pyopenjtalk at module scope, but the path
+# we actually use is cutlet (fugashi + unidic-lite). A stub lets the import pass.
+if "pyopenjtalk" not in sys.modules:
+    sys.modules["pyopenjtalk"] = types.ModuleType("pyopenjtalk")
+
+# Kokoro has no child voice. Lifting a light adult female read by a little over
+# a tone lands closer to the bright, chatty delivery the operator asked for.
+JA_PITCH_LIFT = 1.14
 
 # The lines are the contract with client.js SEQ: five access steps, then the
 # closing salute in that language's own voice.
@@ -92,6 +102,26 @@ LINES = {
             "Начато чтение прав.",
             "Чтение завершено. Проверка пройдена.",
             "Добро пожаловать, товарищ.",
+        ],
+        "slug": [
+            "access",
+            "identity",
+            "accepted",
+            "reading",
+            "verified",
+            "welcome",
+        ],
+    },
+    "ja": {
+        "voice": "jf_alpha",
+        "kokoro_lang": "j",
+        "text": [
+            "アクセス許可が必要ですわ",
+            "ご身分を確認いたしますわ",
+            "アクセス要求、承りましたわ",
+            "権限の読み取りを始めますわ",
+            "読み取り完了でございますわ",
+            "おかえりなさいませ、ご主人様",
         ],
         "slug": [
             "access",
@@ -259,6 +289,17 @@ def patch_local_models():
             module.hf_hub_download = local_hub_download
 
 
+def pitch_lift(pcm, factor):
+    """Raise the pitch by resampling: shorter, higher, brighter."""
+    import numpy as np
+
+    if factor == 1.0 or pcm.size == 0:
+        return pcm
+    length = max(1, int(round(pcm.size / factor)))
+    grid = np.linspace(0.0, pcm.size - 1.0, length)
+    return np.interp(grid, np.arange(pcm.size, dtype=np.float64), pcm).astype(np.float32)
+
+
 def kokoro_lines(lang, texts, speed=1.0):
     """Yield (samples, sample_rate) for each text using Kokoro."""
     import numpy as np
@@ -274,7 +315,10 @@ def kokoro_lines(lang, texts, speed=1.0):
         for _gs, _ps, audio in pipeline(text, voice=spec["voice"], speed=speed):
             array = audio.detach().cpu().numpy() if hasattr(audio, "detach") else np.asarray(audio)
             chunks.append(np.asarray(array, dtype=np.float32).reshape(-1))
-        yield (np.concatenate(chunks) if chunks else np.zeros(0, dtype=np.float32), sample_rate)
+        samples = np.concatenate(chunks) if chunks else np.zeros(0, dtype=np.float32)
+        if lang == "ja":
+            samples = pitch_lift(samples, JA_PITCH_LIFT)
+        yield (samples, sample_rate)
 
 
 def silero_model():
@@ -302,17 +346,19 @@ def silero_lines(lang, texts, voice, model):
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Render boot-sequence voice samples.")
-    parser.add_argument("--langs", default="zh,en,ru", help="comma separated: zh,en,ru")
+    parser.add_argument("--langs", default="zh,en,ru,ja", help="comma separated: zh,en,ru,ja")
     parser.add_argument("--ru-voice", default="baya", help="baya | kseniya | xenia | aidar | eugene")
     parser.add_argument("--mech", type=float, default=MECH_LEVEL, help="mechanical amount, 0..1")
     parser.add_argument("--speed-zh", type=float, default=SPEED["zh"])
     parser.add_argument("--speed-en", type=float, default=SPEED["en"])
     parser.add_argument("--speed-ru", type=float, default=SPEED["ru"])
+    parser.add_argument("--speed-ja", type=float, default=SPEED["ja"])
     args = parser.parse_args(argv)
 
     SPEED["zh"] = args.speed_zh
     SPEED["en"] = args.speed_en
     SPEED["ru"] = args.speed_ru
+    SPEED["ja"] = args.speed_ja
 
     langs = [part.strip() for part in args.langs.split(",") if part.strip()]
     ensure_dirs()

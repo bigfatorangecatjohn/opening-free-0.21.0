@@ -54,7 +54,7 @@ window.__ModuleLoader__.load({
         : [{ lang: 'zh', track: '', cue: FALLBACK_CUE }];
 
     const LANG_KEY = 'dsh-opening:lang';
-    const LANGS = ['zh', 'en', 'ru'];
+    const LANGS = ['zh', 'en', 'ru', 'ja'];
 
     /** The language picked in Settings, or Chinese when nothing is stored. */
     function readLang() {
@@ -91,18 +91,20 @@ window.__ModuleLoader__.load({
     const SALUTE = Array.isArray(CUE.salute) ? CUE.salute[0] : CUE.salute;
     const LEAD_IN = CUE.leadIn || CUE.steps[0].at;
     const LAST_STEP = CUE.steps.length - 1;
-    const BADGE = LANG === 'zh' ? '中文' : LANG === 'en' ? 'EN' : 'RU';
+    const BADGE = { zh: '中文', en: 'EN', ru: 'RU', ja: '日本語' }[LANG] || 'EN';
 
     /** Terminal furniture, one string per track language. */
     const PROTOCOL = {
       zh: '访问协议 · 第五级',
       en: 'Access Protocol · Level V',
       ru: 'Протокол Доступа · Уровень V',
+      ja: 'アクセス・プロトコル · 第五級',
     };
     const CAPTION = {
       zh: '身份已确认 · 准入授予',
       en: 'Identity Confirmed · Access Granted',
       ru: 'Личность Подтверждена · Доступ Разрешён',
+      ja: '身分確認済み · アクセス許可',
     };
 
     /** One step in the active language, with the secondary line as fallback. */
@@ -490,6 +492,7 @@ window.__ModuleLoader__.load({
 }
 
 .dshop-root.is-ru .dshop-zh { font-size: clamp(19px, 2.5vw, 33px); letter-spacing: 0.1em; }
+.dshop-root.is-ja .dshop-zh { font-size: clamp(19px, 2.55vw, 34px); letter-spacing: 0.07em; }
 
 .dshop-zh {
   text-wrap: balance;
@@ -952,7 +955,8 @@ window.__ModuleLoader__.load({
             'dshop-root' +
             (leaving ? ' is-leaving' : '') +
             (LANG === 'ru' ? ' is-ru' : '') +
-            (LANG === 'en' ? ' is-en' : ''),
+            (LANG === 'en' ? ' is-en' : '') +
+            (LANG === 'ja' ? ' is-ja' : ''),
           style: {
             '--dshop-stage': PALETTE.stage,
             '--dshop-ink': PALETTE.ink,
@@ -1050,6 +1054,7 @@ window.__ModuleLoader__.load({
       { key: 'zh', name: '中文', line: '欢迎回来，指挥员' },
       { key: 'en', name: 'English', line: 'Welcome back, commander.' },
       { key: 'ru', name: 'Русский', line: 'Добро пожаловать, товарищ.' },
+      { key: 'ja', name: '日本語', line: 'おかえりなさいませ、ご主人様' },
     ];
 
     /**
