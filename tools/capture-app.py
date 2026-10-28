@@ -64,6 +64,27 @@ def window_rect(hwnd):
     return rect.left, rect.top, rect.right, rect.bottom
 
 
+def bring_to_front(hwnd):
+    """Raise the window for real; SetForegroundWindow alone is refused by Windows."""
+    VK_MENU, KEYEVENTF_KEYUP = 0x12, 0x0002
+    if user32.IsIconic(hwnd):
+        user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+        time.sleep(0.8)
+    for attempt in range(6):
+        user32.SwitchToThisWindow(hwnd, True)
+        # A synthetic Alt tap makes this process the last input owner, which is
+        # what the foreground lock actually checks.
+        user32.keybd_event(VK_MENU, 0, 0, 0)
+        user32.SetForegroundWindow(hwnd)
+        user32.keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0)
+        time.sleep(0.35)
+        if user32.GetForegroundWindow() == hwnd:
+            return True
+        user32.ShowWindow(hwnd, 5)  # SW_SHOW
+        time.sleep(0.2)
+    return False
+
+
 def press_ctrl_r():
     VK_CONTROL, VK_R, KEYEVENTF_KEYUP = 0x11, 0x52, 0x0002
     user32.keybd_event(VK_CONTROL, 0, 0, 0)
@@ -93,11 +114,9 @@ def capture(force_lang):
     hwnd, title = find_window()
     if not hwnd:
         raise SystemExit('the DSH window is not reachable; restore it first')
-    if user32.IsIconic(hwnd):
-        user32.ShowWindow(hwnd, 9)  # SW_RESTORE
-        time.sleep(0.8)
-    user32.SetForegroundWindow(hwnd)
-    time.sleep(0.5)
+    if not bring_to_front(hwnd):
+        raise SystemExit('could not raise the DSH window to the foreground; bring it up and retry')
+    print('  foreground ok', flush=True)
 
     screen_w = user32.GetSystemMetrics(0)
     screen_h = user32.GetSystemMetrics(1)

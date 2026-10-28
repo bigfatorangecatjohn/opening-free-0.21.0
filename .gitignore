@@ -25,3 +25,5 @@ demo/raw-*.mp4
 demo/seg-*.mp4
 demo/concat.txt
 demo/dsh-opening-demo.mp4
+demo/concat-short.txt
+Demo/seg-*-short.mp4
