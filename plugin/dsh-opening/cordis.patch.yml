@@ -1,0 +1,3 @@
+- insert:
+    - id: dsh-opening
+      name: '@local/dsh-opening'

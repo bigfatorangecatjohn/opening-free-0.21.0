@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Opening Sequence",
+    "description": "A full-frame boot stage for DeepSeek Harness, mounted in shell.overlay; the sequence itself is driven by the parameter table in client.js."
+  }
+}

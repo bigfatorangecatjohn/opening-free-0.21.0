@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "开机动画",
+    "description": "为 DeepSeek Harness 铺一层整帧开机舞台，挂在 shell.overlay 上；序列本身由 client.js 里的参数表驱动。"
+  }
+}
