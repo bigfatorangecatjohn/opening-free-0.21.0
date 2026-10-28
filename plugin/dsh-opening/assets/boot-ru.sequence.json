@@ -2,7 +2,7 @@
   "lang": "ru",
   "sampleRate": 24000,
   "total": 18.0,
-  "mech": 0.65,
+  "mech": 0.6,
   "speeds": {
     "zh": 1.15,
     "en": 1.0,
@@ -18,13 +18,21 @@
     0.949
   ],
   "mark": {
-    "at": 0.98,
-    "dur": 1.62
+    "at": 1.02,
+    "dur": 1.58
   },
-  "beeps": {
-    "count": 3,
-    "gap": 0.2,
-    "freq": 987.77
+  "chimes": {
+    "notes": [
+      1046.5,
+      1318.51,
+      1567.98
+    ],
+    "at": [
+      0.1,
+      0.34,
+      0.58
+    ],
+    "markAt": 1.02
   },
   "cues": [
     {
@@ -33,7 +41,12 @@
       "dur": 1.986,
       "end": 4.586,
       "zh": "需要访问许可",
-      "en": "Access permission required."
+      "en": "Access permission required.",
+      "text": {
+        "zh": "需要访问许可",
+        "en": "Access permission required.",
+        "ru": "Требуется разрешение на доступ."
+      }
     },
     {
       "name": "gap",
@@ -47,7 +60,12 @@
       "dur": 1.292,
       "end": 6.533,
       "zh": "身份资料确认",
-      "en": "Identity verification."
+      "en": "Identity verification.",
+      "text": {
+        "zh": "身份资料确认",
+        "en": "Identity verification.",
+        "ru": "Проверка личности."
+      }
     },
     {
       "name": "gap",
@@ -61,7 +79,12 @@
       "dur": 1.652,
       "end": 8.838,
       "zh": "接受访问需求",
-      "en": "Access request accepted."
+      "en": "Access request accepted.",
+      "text": {
+        "zh": "接受访问需求",
+        "en": "Access request accepted.",
+        "ru": "Запрос на доступ принят."
+      }
     },
     {
       "name": "gap",
@@ -75,7 +98,12 @@
       "dur": 1.452,
       "end": 10.945,
       "zh": "开始读取权限",
-      "en": "Permission read started."
+      "en": "Permission read started.",
+      "text": {
+        "zh": "开始读取权限",
+        "en": "Permission read started.",
+        "ru": "Начинаю чтение прав."
+      }
     },
     {
       "name": "gap",
@@ -89,7 +117,12 @@
       "dur": 2.345,
       "end": 13.944,
       "zh": "读取完毕，核验通过",
-      "en": "Read complete. Verified."
+      "en": "Read complete. Verified.",
+      "text": {
+        "zh": "读取完毕，核验通过",
+        "en": "Read complete. Verified.",
+        "ru": "Чтение завершено. Проверено."
+      }
     },
     {
       "name": "gap",

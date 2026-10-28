@@ -81,32 +81,39 @@ def seconds(block):
     return block.size / float(TARGET_RATE)
 
 
-def beep(rate, freq=987.77, dur=0.20, decay=9.0, gain=0.42):
-    """One machine chime: a bright fundamental with two soft partials.
+NOTE_HZ = (1046.50, 1318.51, 1567.98)  # C6 - E6 - G6, rising major triad
+NOTE_AT = (0.10, 0.34, 0.58)
+MARK_AT = 1.02
 
-    The attack is fast and the tail is exponential, so it reads as a computer
-    prompt rather than a musical note.
+
+def chime(rate, freq, dur=0.55, decay=2.6, gain=0.30):
+    """A single clean chime: sine fundamental, two faint harmonics, glassy shimmer.
+
+    The previous prompt sat at 987 Hz with 0.35 / 0.18 partials and a 0.20 s
+    tail, which read as a beeper. This one is an octave up, the partials are
+    much weaker, and the tail is longer and softer, so it reads as a struck
+    bell instead of an alarm.
     """
     count = int(round(rate * dur))
     t = np.arange(count, dtype=np.float64) / rate
-    env = np.exp(-decay * t) * (1.0 - np.exp(-260.0 * t))
-    tone = (
-        np.sin(2.0 * np.pi * freq * t)
-        + 0.35 * np.sin(2.0 * np.pi * freq * 2.02 * t)
-        + 0.18 * np.sin(2.0 * np.pi * freq * 3.01 * t)
-    )
-    return (tone * env * gain).astype(np.float32)
+    attack = np.minimum(1.0, t / 0.006)
+    vibrato = 0.10 * np.sin(2.0 * np.pi * 5.0 * t)
+    body = np.sin(2.0 * np.pi * freq * t + vibrato) * np.exp(-decay * t)
+    upper = 0.16 * np.sin(2.0 * np.pi * freq * 2.004 * t) * np.exp(-decay * 2.1 * t)
+    air = 0.04 * np.sin(2.0 * np.pi * freq * 3.008 * t) * np.exp(-decay * 3.4 * t)
+    return ((body + upper + air) * attack * gain).astype(np.float32)
 
 
-def beeps(rate, count=3, gap=0.20, **kwargs):
-    """`ding ding ding` — the three-note prompt that opens the sequence."""
-    one = beep(rate, **kwargs)
-    pad = np.zeros(int(round(rate * gap)), dtype=np.float32)
-    parts = []
-    for _index in range(count):
-        parts.append(one)
-        parts.append(pad)
-    return np.concatenate(parts)
+def chimes(rate, length, gain=0.30):
+    """Three rising notes laid into a lead-in of `length` seconds."""
+    buffer = np.zeros(int(round(rate * length)), dtype=np.float32)
+    for freq, at in zip(NOTE_HZ, NOTE_AT):
+        one = chime(rate, freq, gain=gain)
+        start = int(round(rate * at))
+        stop = min(buffer.size, start + one.size)
+        if stop > start:
+            buffer[start:stop] += one[: stop - start]
+    return buffer
 
 
 class Voice:
@@ -163,7 +170,7 @@ class Voice:
 def main(argv):
     parser = argparse.ArgumentParser(description="Build one boot-sequence audio track.")
     parser.add_argument("--lang", default="zh", choices=["zh", "en", "ru"])
-    parser.add_argument("--mech", type=float, default=0.75)
+    parser.add_argument("--mech", type=float, default=0.6)
     parser.add_argument("--speed-zh", type=float, default=make_samples.SPEED["zh"])
     parser.add_argument("--speed-en", type=float, default=make_samples.SPEED["en"])
     parser.add_argument("--speed-ru", type=float, default=make_samples.SPEED["ru"])
@@ -206,12 +213,9 @@ def main(argv):
         return at
 
     # Lead-in: three chimes, then the mark surfaces as the last one rings out.
-    lead_head = silence(0.06)
-    chime = beeps(TARGET_RATE)
-    lead_tail = silence(max(0.0, LEAD_IN - seconds(lead_head) - seconds(chime)))
-    mark_at = round(seconds(lead_head) + seconds(chime) - 0.28, 3)
+    mark_at = MARK_AT
     mark_dur = round(LEAD_IN - mark_at, 3)
-    push(np.concatenate([lead_head, chime, lead_tail]), "lead")
+    push(chimes(TARGET_RATE, LEAD_IN), "lead")
     for index, block in enumerate(steps):
         push(block, "step%d" % (index + 1))
         push(silence(gaps[index]), "gap")
@@ -241,6 +245,14 @@ def main(argv):
             cue.update({"lang": args.lang, "text": texts[5]})
         cues.append(cue)
 
+    for cue in cues:
+        if cue["name"].startswith("step"):
+            index = int(cue["name"][4:]) - 1
+            cue["text"] = {
+                lang: make_samples.LINES[lang]["text"][index]
+                for lang in ("zh", "en", "ru")
+            }
+
     timeline = {
         "lang": args.lang,
         "sampleRate": TARGET_RATE,
@@ -251,7 +263,7 @@ def main(argv):
         "tail": round(TAIL, 3),
         "gaps": [round(gap, 3) for gap in gaps],
         "mark": {"at": mark_at, "dur": mark_dur},
-        "beeps": {"count": 3, "gap": 0.20, "freq": 987.77},
+        "chimes": {"notes": list(NOTE_HZ), "at": list(NOTE_AT), "markAt": MARK_AT},
         "cues": cues,
     }
 

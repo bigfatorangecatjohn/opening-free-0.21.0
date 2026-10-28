@@ -36,23 +36,54 @@ window.__ModuleLoader__.load({
       total: 18,
       leadIn: 2.6,
       fadeOut: 0.52,
-      mark: { at: 1.4, dur: 1.2 },
+      mark: { at: 1.02, dur: 1.58 },
       steps: [
-        { at: 2.6, end: 3.9, zh: '需要访问许可', en: 'ACCESS PERMISSION REQUIRED' },
-        { at: 4.7, end: 6.0, zh: '身份资料确认', en: 'IDENTITY VERIFICATION' },
-        { at: 6.8, end: 8.1, zh: '接受访问需求', en: 'ACCESS REQUEST ACCEPTED' },
-        { at: 8.9, end: 10.2, zh: '开始读取权限', en: 'PERMISSION READ STARTED' },
-        { at: 11.0, end: 12.4, zh: '读取完毕 · 核验通过', en: 'READ COMPLETE · VERIFIED' },
+        { at: 2.6, end: 3.9, text: { zh: '需要访问许可', en: 'ACCESS PERMISSION REQUIRED', ru: 'ТРЕБУЕТСЯ ДОСТУП' } },
+        { at: 4.9, end: 6.1, text: { zh: '身份资料确认', en: 'IDENTITY VERIFICATION', ru: 'ПРОВЕРКА ЛИЧНОСТИ' } },
+        { at: 7.3, end: 8.5, text: { zh: '接受访问需求', en: 'ACCESS REQUEST ACCEPTED', ru: 'ДОСТУП ПРИНЯТ' } },
+        { at: 9.7, end: 10.9, text: { zh: '开始读取权限', en: 'PERMISSION READ STARTED', ru: 'ЧТЕНИЕ ПРАВ' } },
+        { at: 12.2, end: 13.6, text: { zh: '读取完毕 · 核验通过', en: 'READ COMPLETE · VERIFIED', ru: 'ПРОВЕРЕНО' } },
       ],
-      salute: { lang: 'zh', at: 13.3, end: 14.8, text: '欢迎回来，指挥员' },
+      salute: { lang: 'zh', at: 15.5, end: 16.7, text: '欢迎回来，指挥员' },
     };
 
-    const CUE = window.__DSH_OPENING_CUE__ || FALLBACK_CUE;
-    const TRACK = window.__DSH_OPENING_TRACK__ || '';
     const MARK = window.__DSH_OPENING_MARK__ || '';
+    const SET =
+      Array.isArray(window.__DSH_OPENING_SET__) && window.__DSH_OPENING_SET__.length
+        ? window.__DSH_OPENING_SET__
+        : [{ lang: 'zh', track: '', cue: FALLBACK_CUE }];
+
+    const CYCLE_KEY = 'dsh-opening:cycle';
+
+    /** Each page load plays the next language of the set, so all of them get seen. */
+    function pickSet() {
+      let index = 0;
+      try {
+        const stored = parseInt(window.localStorage.getItem(CYCLE_KEY) || '0', 10);
+        index = Number.isFinite(stored) ? Math.abs(stored) % SET.length : 0;
+        window.localStorage.setItem(CYCLE_KEY, String(index + 1));
+      } catch (error) {
+        index = 0;
+      }
+      return SET[index];
+    }
+
+    const ACTIVE = pickSet();
+    const CUE = ACTIVE.cue || FALLBACK_CUE;
+    const TRACK = ACTIVE.track || '';
+    const LANG = CUE.lang || ACTIVE.lang || 'zh';
+    const SUBTITLE = LANG === 'zh' ? 'en' : LANG === 'en' ? 'zh' : 'en';
     const SALUTE = Array.isArray(CUE.salute) ? CUE.salute[0] : CUE.salute;
     const LEAD_IN = CUE.leadIn || CUE.steps[0].at;
     const LAST_STEP = CUE.steps.length - 1;
+    const BADGE = LANG === 'zh' ? '中文' : LANG === 'en' ? 'EN' : 'RU';
+
+    /** One step in the active language, with the secondary line as fallback. */
+    function line(step, lang) {
+      if (step.text) return step.text[lang] || step.text.en || step.text.zh || '';
+      if (lang === 'zh') return step.zh || '';
+      return step.en || step.zh || '';
+    }
 
     const PALETTE = {
       stage: '#f7f8fa',
@@ -91,10 +122,17 @@ window.__ModuleLoader__.load({
       return { phase: CUE.steps.length, salute: true };
     }
 
+    function envelope(life) {
+      const rise = Math.min(1, life / 0.18);
+      const fall = life > 0.7 ? 1 - (life - 0.7) / 0.3 : 1;
+      return Math.max(0, Math.min(rise, fall));
+    }
+
     /**
-     * A drifting particle field with proximity links — the 流浪地球 line work,
-     * reduced to its cheapest honest version: dots that draw their own tethers.
-     * All state lives in this closure; the caller resizes and draws.
+     * A drifting particle field that keeps ionizing: each dot fades in with a
+     * bright recombination flash, drifts, then dims out and is born somewhere
+     * else. Nearby dots draw tethers between them — the 流浪地球 line work,
+     * reduced to its cheapest honest version.
      */
     function makeField(canvas) {
       const ctx = canvas.getContext('2d');
@@ -102,15 +140,33 @@ window.__ModuleLoader__.load({
       const rgb = PALETTE.particle;
       let w = 0;
       let h = 0;
+      let glow = null;
 
-      function spawn() {
+      function makeGlow() {
+        const size = 64;
+        const sheet = document.createElement('canvas');
+        sheet.width = size;
+        sheet.height = size;
+        const g = sheet.getContext('2d');
+        const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+        grad.addColorStop(0, 'rgba(127, 182, 232, 0.9)');
+        grad.addColorStop(0.34, 'rgba(127, 182, 232, 0.26)');
+        grad.addColorStop(1, 'rgba(127, 182, 232, 0)');
+        g.fillStyle = grad;
+        g.fillRect(0, 0, size, size);
+        return sheet;
+      }
+
+      function spawn(seeded) {
         return {
           x: Math.random(),
           y: Math.random(),
-          vx: (Math.random() - 0.5) * 0.000045,
-          vy: (Math.random() - 0.5) * 0.000045,
-          r: 0.55 + Math.random() * 1.75,
-          a: 0.12 + Math.random() * 0.46,
+          vx: (Math.random() - 0.5) * 0.00006,
+          vy: (Math.random() - 0.5) * 0.00006,
+          r: 0.5 + Math.random() * 1.4,
+          a: 0.22 + Math.random() * 0.52,
+          life: seeded ? Math.random() : 0,
+          span: 2.6 + Math.random() * 4.2,
         };
       }
 
@@ -121,27 +177,73 @@ window.__ModuleLoader__.load({
         canvas.width = Math.max(1, Math.round(w * dpr));
         canvas.height = Math.max(1, Math.round(h * dpr));
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        glow = glow || makeGlow();
         const want = Math.max(24, Math.min(88, Math.round((w * h) / 26000)));
-        while (parts.length < want) parts.push(spawn());
+        while (parts.length < want) parts.push(spawn(true));
         parts.length = want;
       }
 
-      function frame(dt, glow) {
+      function frame(dt, finale) {
         ctx.clearRect(0, 0, w, h);
+
         for (let i = 0; i < parts.length; i++) {
           const q = parts[i];
+          q.life += dt / 1000 / q.span;
           q.x += q.vx * dt;
           q.y += q.vy * dt;
+          if (q.life >= 1) {
+            const next = spawn(false);
+            q.x = next.x;
+            q.y = next.y;
+            q.vx = next.vx;
+            q.vy = next.vy;
+            q.r = next.r;
+            q.a = next.a;
+            q.span = next.span;
+            q.life = 0;
+            continue;
+          }
           if (q.x < -0.02) q.x = 1.02;
           else if (q.x > 1.02) q.x = -0.02;
           if (q.y < -0.02) q.y = 1.02;
           else if (q.y > 1.02) q.y = -0.02;
         }
 
-        const reach = 104 + glow * 150;
+        // ignition glow: additive, so crossings brighten each other
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < parts.length; i++) {
+          const q = parts[i];
+          const e = envelope(q.life);
+          if (e <= 0.001) continue;
+          const px = q.x * w;
+          const py = q.y * h;
+          const reach = (7 + 13 * e) * (1 + 0.5 * finale);
+          ctx.globalAlpha = e * 0.5;
+          ctx.drawImage(glow, px - reach, py - reach, reach * 2, reach * 2);
+
+          if (q.life < 0.16) {
+            const spark = 1 - q.life / 0.16;
+            ctx.globalAlpha = spark * 0.85;
+            ctx.strokeStyle = 'rgba(226, 242, 255, 0.95)';
+            ctx.lineWidth = 0.9;
+            const arm = 4 + 11 * spark;
+            ctx.beginPath();
+            ctx.moveTo(px - arm, py);
+            ctx.lineTo(px + arm, py);
+            ctx.moveTo(px, py - arm);
+            ctx.lineTo(px, py + arm);
+            ctx.stroke();
+          }
+        }
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+
+        const span = 104 + finale * 150;
         ctx.lineWidth = 0.6;
         for (let i = 0; i < parts.length; i++) {
           const a = parts[i];
+          const ea = envelope(a.life);
+          if (ea <= 0.05) continue;
           const ax = a.x * w;
           const ay = a.y * h;
           for (let j = i + 1; j < parts.length; j++) {
@@ -149,8 +251,8 @@ window.__ModuleLoader__.load({
             const dx = ax - b.x * w;
             const dy = ay - b.y * h;
             const d = Math.sqrt(dx * dx + dy * dy);
-            if (d > reach) continue;
-            const alpha = (1 - d / reach) * 0.2;
+            if (d > span) continue;
+            const alpha = (1 - d / span) * 0.2 * ea * envelope(b.life);
             ctx.strokeStyle = 'rgba(61, 134, 198, ' + alpha.toFixed(3) + ')';
             ctx.beginPath();
             ctx.moveTo(ax, ay);
@@ -161,9 +263,11 @@ window.__ModuleLoader__.load({
 
         for (let i = 0; i < parts.length; i++) {
           const q = parts[i];
+          const e = envelope(q.life);
+          if (e <= 0.01) continue;
           ctx.beginPath();
           ctx.arc(q.x * w, q.y * h, q.r, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(' + rgb + ', ' + q.a.toFixed(3) + ')';
+          ctx.fillStyle = 'rgba(' + rgb + ', ' + (q.a * e).toFixed(3) + ')';
           ctx.fill();
         }
       }
@@ -273,6 +377,14 @@ window.__ModuleLoader__.load({
   color: var(--dshop-dim);
 }
 
+.dshop-lang {
+  border: 1px solid var(--dshop-rule);
+  border-radius: 2px;
+  padding: 1px 5px;
+  letter-spacing: 0.14em;
+  color: var(--dshop-ink);
+}
+
 .dshop-counter {
   color: var(--dshop-accent);
   letter-spacing: 0.24em;
@@ -288,6 +400,8 @@ window.__ModuleLoader__.load({
   text-align: center;
   padding: 0 8vw;
 }
+
+.dshop-root.is-ru .dshop-zh { font-size: clamp(19px, 2.5vw, 33px); letter-spacing: 0.1em; }
 
 .dshop-zh {
   font-size: clamp(22px, 3.1vw, 40px);
@@ -557,7 +671,7 @@ window.__ModuleLoader__.load({
       return h(
         'div',
         {
-          className: 'dshop-root' + (leaving ? ' is-leaving' : ''),
+          className: 'dshop-root' + (leaving ? ' is-leaving' : '') + (LANG === 'ru' ? ' is-ru' : ''),
           style: {
             '--dshop-stage': PALETTE.stage,
             '--dshop-ink': PALETTE.ink,
@@ -583,6 +697,7 @@ window.__ModuleLoader__.load({
           'div',
           { key: 'top', className: 'dshop-topbar' },
           h('span', null, 'DSH · ACCESS CONTROL'),
+          h('span', { className: 'dshop-lang' }, BADGE),
           h('span', { ref: counterRef, className: 'dshop-counter' }, '0000'),
           h('span', null, 'BOOT SEQUENCE'),
         ),
@@ -605,10 +720,10 @@ window.__ModuleLoader__.load({
                   h(
                     'div',
                     { className: 'dshop-zh' },
-                    step.zh,
+                    line(step, LANG),
                     h('span', { className: 'dshop-caret' }),
                   ),
-                  h('div', { className: 'dshop-en' }, step.en),
+                  h('div', { className: 'dshop-en' }, line(step, SUBTITLE)),
                 )
               : null,
         ),
@@ -620,7 +735,7 @@ window.__ModuleLoader__.load({
               'div',
               { key: 'log-' + i, className: 'dshop-logrow' },
               h('i', null, '✓'),
-              h('span', null, row.zh),
+              h('span', null, line(row, LANG)),
             ),
           ),
         ),

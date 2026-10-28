@@ -2,14 +2,14 @@
 //
 // Why the audio travels inside the bundle: the client half has to play its own
 // soundtrack, and asking the host for an HTTP route turned out to be
-// unreachable in this build, so the track, its timeline and the mark are all
-// inlined here — the same move the reference splash plugin made.
+// unreachable in this build, so the tracks, their timelines and the mark are
+// all inlined here — the same move the reference splash plugin made.
 //
-// The track is one language per build:
+// All three language tracks ship together; the client plays one per page load,
+// cycling zh -> en -> ru, so every version can be seen without a rebuild.
 //
-//     node tools/build-client.mjs               # Chinese track (default)
-//     node tools/build-client.mjs --lang en     # English track
-//     node tools/build-client.mjs --lang ru     # Russian track
+//     node tools/build-client.mjs            # bundle zh, en and ru (default)
+//     node tools/build-client.mjs --langs zh # bundle one language only
 //
 // Edit `client.src.js`; run this; commit both.
 
@@ -25,56 +25,78 @@ const markFile = join(assetsDir, 'whale.png');
 const outputFile = join(packageDir, 'client.js');
 
 const argv = process.argv.slice(2);
-const langFlag = argv.indexOf('--lang');
-const lang = langFlag >= 0 ? argv[langFlag + 1] : 'zh';
-if (!['zh', 'en', 'ru'].includes(lang)) {
-  console.error('unknown --lang ' + lang + ' (expected zh, en or ru)');
-  process.exit(1);
-}
-
-const trackFile = join(assetsDir, 'boot-' + lang + '.wav');
-const cueFile = join(assetsDir, 'boot-' + lang + '.sequence.json');
-for (const file of [sourceFile, trackFile, cueFile, markFile]) {
-  if (!existsSync(file)) {
-    console.error('missing input: ' + file);
+const langFlag = argv.indexOf('--langs');
+const langs = (langFlag >= 0 ? argv[langFlag + 1] : 'zh,en,ru')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+for (const lang of langs) {
+  if (!['zh', 'en', 'ru'].includes(lang)) {
+    console.error('unknown language ' + lang + ' (expected zh, en or ru)');
     process.exit(1);
   }
 }
 
 const source = readFileSync(sourceFile, 'utf8');
-const audio = readFileSync(trackFile);
 const mark = readFileSync(markFile);
-const manifest = JSON.parse(readFileSync(cueFile, 'utf8'));
-
-// The client wants one shape, whatever the build script wrote.
-const steps = manifest.cues
-  .filter((cue) => cue.name.startsWith('step'))
-  .map((cue) => ({ at: cue.at, end: cue.end, zh: cue.zh, en: cue.en }));
-const salute = manifest.cues.find((cue) => cue.name === 'salute');
-if (steps.length !== 5 || !salute) {
-  console.error('manifest needs five step cues and one salute cue');
+if (!existsSync(markFile)) {
+  console.error('missing input: ' + markFile);
   process.exit(1);
 }
 
-const cue = {
-  lang: manifest.lang,
-  total: manifest.total,
-  leadIn: manifest.leadIn,
-  fadeOut: 0.52,
-  mark: manifest.mark,
-  steps,
-  salute: { lang: salute.lang, at: salute.at, end: salute.end, text: salute.text },
-};
+/** One {lang, track, cue} entry per requested language. */
+function buildEntry(lang) {
+  const trackFile = join(assetsDir, 'boot-' + lang + '.wav');
+  const cueFile = join(assetsDir, 'boot-' + lang + '.sequence.json');
+  for (const file of [trackFile, cueFile]) {
+    if (!existsSync(file)) {
+      console.error('missing input: ' + file);
+      process.exit(1);
+    }
+  }
+  const audio = readFileSync(trackFile);
+  const manifest = JSON.parse(readFileSync(cueFile, 'utf8'));
+  const steps = manifest.cues
+    .filter((cue) => cue.name.startsWith('step'))
+    .map((cue) => ({ at: cue.at, end: cue.end, text: cue.text }));
+  const salute = manifest.cues.find((cue) => cue.name === 'salute');
+  if (steps.length !== 5 || !salute) {
+    console.error(lang + ': manifest needs five step cues and one salute cue');
+    process.exit(1);
+  }
+  if (steps.some((step) => !step.text || !step.text.zh)) {
+    console.error(lang + ': step cues need the tri-lingual `text` map');
+    process.exit(1);
+  }
+  return {
+    lang,
+    wav: audio,
+    entry: {
+      lang,
+      track: 'data:audio/wav;base64,' + audio.toString('base64'),
+      cue: {
+        lang: manifest.lang,
+        total: manifest.total,
+        leadIn: manifest.leadIn,
+        fadeOut: 0.52,
+        mark: manifest.mark,
+        steps,
+        salute: { lang: salute.lang, at: salute.at, end: salute.end, text: salute.text },
+      },
+    },
+  };
+}
+
+const built = langs.map(buildEntry);
 
 const banner = [
   '/* GENERATED FILE — edit client.src.js and run `node tools/build-client.mjs`. */',
-  'window.__DSH_OPENING_TRACK__ = ' + JSON.stringify('data:audio/wav;base64,' + audio.toString('base64')) + ';',
-  'window.__DSH_OPENING_CUE__ = ' + JSON.stringify(cue) + ';',
+  'window.__DSH_OPENING_SET__ = ' + JSON.stringify(built.map((item) => item.entry)) + ';',
   'window.__DSH_OPENING_MARK__ = ' + JSON.stringify('data:image/png;base64,' + mark.toString('base64')) + ';',
   '',
 ].join('\n');
 
-for (const key of ['window.__DSH_OPENING_TRACK__', 'window.__DSH_OPENING_CUE__', 'window.__DSH_OPENING_MARK__']) {
+for (const key of ['window.__DSH_OPENING_SET__', 'window.__DSH_OPENING_MARK__']) {
   if (source.indexOf(key) < 0) {
     console.error('client.src.js never reads ' + key + '; the inline payload would be ignored.');
     process.exit(1);
@@ -84,9 +106,11 @@ for (const key of ['window.__DSH_OPENING_TRACK__', 'window.__DSH_OPENING_CUE__',
 writeFileSync(outputFile, banner + source, 'utf8');
 
 const kib = (value) => (value / 1024).toFixed(1) + ' KiB';
-const total = banner.length + source.length;
-console.log('lang    ' + lang + '  (' + manifest.total + ' s, mech ' + manifest.mech + ')');
-console.log('track   ' + kib(audio.length) + ' -> inlined');
+const totalBytes = Buffer.byteLength(banner + source, 'utf8');
+console.log('langs   ' + built.map((item) => item.lang).join(', '));
+for (const item of built) {
+  console.log('track   ' + item.lang + '  ' + kib(item.wav.length) + ' -> inlined');
+}
 console.log('mark    ' + kib(mark.length) + ' -> inlined');
-console.log('client  ' + kib(source.length) + ' -> ' + kib(total));
+console.log('client  ' + kib(totalBytes) + ' (source ' + kib(Buffer.byteLength(source, 'utf8')) + ')');
 console.log('wrote   ' + outputFile);
