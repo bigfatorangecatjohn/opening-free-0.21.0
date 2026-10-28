@@ -1,0 +1,100 @@
+{
+  "lang": "zh",
+  "sampleRate": 24000,
+  "total": 18.0,
+  "mech": 0.75,
+  "speeds": {
+    "zh": 1.15,
+    "en": 1.0,
+    "ru": 1.0
+  },
+  "leadIn": 2.6,
+  "tail": 1.3,
+  "gaps": [
+    1.264,
+    1.264,
+    1.264,
+    1.264,
+    1.833
+  ],
+  "cues": [
+    {
+      "name": "step1",
+      "at": 2.6,
+      "dur": 1.077,
+      "end": 3.677,
+      "zh": "需要访问许可",
+      "en": "Access permission required."
+    },
+    {
+      "name": "gap",
+      "at": 3.677,
+      "dur": 1.264,
+      "end": 4.941
+    },
+    {
+      "name": "step2",
+      "at": 4.941,
+      "dur": 1.162,
+      "end": 6.102,
+      "zh": "身份资料确认",
+      "en": "Identity verification."
+    },
+    {
+      "name": "gap",
+      "at": 6.102,
+      "dur": 1.264,
+      "end": 7.366
+    },
+    {
+      "name": "step3",
+      "at": 7.366,
+      "dur": 1.157,
+      "end": 8.523,
+      "zh": "接受访问需求",
+      "en": "Access request accepted."
+    },
+    {
+      "name": "gap",
+      "at": 8.523,
+      "dur": 1.264,
+      "end": 9.787
+    },
+    {
+      "name": "step4",
+      "at": 9.787,
+      "dur": 1.115,
+      "end": 10.901,
+      "zh": "开始读取权限",
+      "en": "Permission read started."
+    },
+    {
+      "name": "gap",
+      "at": 10.901,
+      "dur": 1.264,
+      "end": 12.165
+    },
+    {
+      "name": "step5",
+      "at": 12.165,
+      "dur": 1.48,
+      "end": 13.645,
+      "zh": "读取完毕，核验通过",
+      "en": "Read complete. Verified."
+    },
+    {
+      "name": "gap",
+      "at": 13.645,
+      "dur": 1.833,
+      "end": 15.478
+    },
+    {
+      "name": "salute",
+      "at": 15.478,
+      "dur": 1.222,
+      "end": 16.7,
+      "lang": "zh",
+      "text": "欢迎回来，指挥员"
+    }
+  ]
+}

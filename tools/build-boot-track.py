@@ -1,19 +1,28 @@
 # -*- coding: utf-8 -*-
 """Build the one audio track the boot sequence actually plays.
 
-The animation speaks Chinese; the closing salute speaks Russian, Chinese and
-English in that order. So the runtime track is:
+One language per track: the five access-protocol steps and the closing salute
+are all spoken in the same voice, because a boot sequence that starts in
+Chinese and salutes in Russian reads like three different machines talking.
 
-    lead-in -> zh step 1..5 -> pause -> ru salute -> zh salute -> en salute -> tail
+    lead-in -> step 1..5 (same language) -> pause -> salute (same language) -> tail
+
+The lead-in is the silent beat where the whale mark fades in and out; the tail
+is the beat where the salute stays on screen before the stage dissolves.
+
+Pads are not hard-coded: the script measures how long the spoken lines came out
+and distributes the remaining time across the gaps so every language lands on
+the same `--target` (18 s by default).
 
 Every segment is rendered with the same engines and the same mechanical colour
-as tools\\make-samples.py, then joined with fixed pads. The resulting timeline is
-written next to the WAV as .sequence.json so client.js can stay a dumb player.
+as tools\\make-samples.py. The resulting timeline is written next to the WAV as
+.sequence.json so client.js can stay a dumb player.
 
 Usage:
 
-    .venv-tts\\Scripts\\python.exe tools\\build-boot-track.py
-    .venv-tts\\Scripts\\python.exe tools\\build-boot-track.py --mech 0.6
+    .venv-tts\\Scripts\\python.exe tools\\build-boot-track.py --lang zh --mech 0.75
+    .venv-tts\\Scripts\\python.exe tools\\build-boot-track.py --lang en --mech 0.75
+    .venv-tts\\Scripts\\python.exe tools\\build-boot-track.py --lang ru --mech 0.75
 """
 
 import argparse
@@ -29,13 +38,13 @@ import numpy as np  # noqa: E402
 ASSET_DIR = os.path.join(HERE, "plugin", "dsh-opening", "assets")
 TARGET_RATE = 24000
 
-# Pads, in seconds. The spoken lines are short (~1.1-1.8 s each); the pacing
-# comes from these beats. Tuned to land the whole sequence on ~18 s.
-LEAD_IN = 0.90
-PAD_STEP = 0.62
-PAD_BEFORE_FINALE = 0.90
-PAD_FINALE_LINE = 0.55
-TAIL = 1.50
+# Fixed beats. The lead-in carries the whale mark; the tail carries the salute.
+LEAD_IN = 2.60
+TAIL = 1.30
+
+# Relative widths of the gaps that eat whatever time the speech left over:
+# four gaps between the steps, then one longer breath before the salute.
+GAP_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.45]
 
 
 def load_samples_module():
@@ -66,6 +75,10 @@ def resample_to(samples, rate, target):
 
 def silence(seconds):
     return np.zeros(int(round(seconds * TARGET_RATE)), dtype=np.float32)
+
+
+def seconds(block):
+    return block.size / float(TARGET_RATE)
 
 
 class Voice:
@@ -120,26 +133,36 @@ class Voice:
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(description="Build the boot-sequence audio track.")
-    parser.add_argument("--mech", type=float, default=make_samples.MECH_LEVEL)
+    parser = argparse.ArgumentParser(description="Build one boot-sequence audio track.")
+    parser.add_argument("--lang", default="zh", choices=["zh", "en", "ru"])
+    parser.add_argument("--mech", type=float, default=0.75)
     parser.add_argument("--speed-zh", type=float, default=make_samples.SPEED["zh"])
+    parser.add_argument("--speed-en", type=float, default=make_samples.SPEED["en"])
+    parser.add_argument("--speed-ru", type=float, default=make_samples.SPEED["ru"])
     parser.add_argument("--ru-voice", default="baya")
-    parser.add_argument("--out", default=os.path.join(ASSET_DIR, "boot.wav"))
+    parser.add_argument("--target", type=float, default=18.0)
+    parser.add_argument("--out", default=None)
     args = parser.parse_args(argv)
 
+    speed = {"zh": args.speed_zh, "en": args.speed_en, "ru": args.speed_ru}[args.lang]
+    out = args.out or os.path.join(ASSET_DIR, "boot-%s.wav" % args.lang)
     if not os.path.isdir(ASSET_DIR):
         os.makedirs(ASSET_DIR)
 
     voice = Voice(args.mech, args.ru_voice)
+    texts = make_samples.LINES[args.lang]["text"]
+    if len(texts) < 6:
+        raise SystemExit("%s needs 6 lines (5 steps + salute), found %d" % (args.lang, len(texts)))
 
-    print("zh steps at %.2fx, mech %.2f ..." % (args.speed_zh, args.mech), flush=True)
-    zh_texts = make_samples.LINES["zh"]["text"][:5]
-    steps = [voice.kokoro("zh", text, args.speed_zh) for text in zh_texts]
+    print("%s steps at %.2fx, mech %.2f ..." % (args.lang, speed, args.mech), flush=True)
+    steps = [voice.line(args.lang, text, speed) for text in texts[:5]]
+    print("salute ...", flush=True)
+    salute = voice.line(args.lang, texts[5], speed)
 
-    print("salutes ...", flush=True)
-    salutes = [
-        voice.line(lang, make_samples.LINES[lang]["text"][5]) for lang in ("ru", "zh", "en")
-    ]
+    speech = sum(seconds(block) for block in steps) + seconds(salute)
+    spare = args.target - LEAD_IN - TAIL - speech
+    weight_sum = sum(GAP_WEIGHTS)
+    gaps = [max(0.35, spare * weight / weight_sum) for weight in GAP_WEIGHTS] if spare > 0 else [0.35] * 5
 
     pieces = []
     order = []
@@ -149,47 +172,66 @@ def main(argv):
         nonlocal cursor
         at = cursor
         pieces.append(block)
-        cursor += block.size / float(TARGET_RATE)
+        cursor += seconds(block)
         if label:
-            order.append((label, at, block.size / float(TARGET_RATE)))
+            order.append((label, at, seconds(block)))
         return at
 
     push(silence(LEAD_IN), "lead")
     for index, block in enumerate(steps):
         push(block, "step%d" % (index + 1))
-        push(silence(PAD_BEFORE_FINALE if index == len(steps) - 1 else PAD_STEP), "pad")
-    for lang, block in zip(("ru", "zh", "en"), salutes):
-        push(block, "finale-" + lang)
-        push(silence(PAD_FINALE_LINE), "pad")
+        push(silence(gaps[index]), "gap")
+    push(salute, "salute")
     push(silence(TAIL), "tail")
 
     track = np.concatenate(pieces).astype(np.float32)
-    total = track.size / float(TARGET_RATE)
+    total = seconds(track)
+
+    # On-screen labels are always the bilingual pair (Chinese lead, English
+    # subtitles) so the same layout works no matter which track is playing.
+    display = {}
+    for index in range(5):
+        display["step%d" % (index + 1)] = {
+            "zh": make_samples.LINES["zh"]["text"][index],
+            "en": make_samples.LINES["en"]["text"][index],
+        }
+
+    cues = []
+    for name, at, dur in order:
+        if name in ("lead", "tail"):
+            continue
+        cue = {"name": name, "at": round(at, 3), "dur": round(dur, 3), "end": round(at + dur, 3)}
+        if name in display:
+            cue.update(display[name])
+        elif name == "salute":
+            cue.update({"lang": args.lang, "text": texts[5]})
+        cues.append(cue)
 
     timeline = {
+        "lang": args.lang,
         "sampleRate": TARGET_RATE,
         "total": round(total, 3),
         "mech": args.mech,
-        "speed": {"zh": args.speed_zh},
-        "cues": [
-            {"name": name, "at": round(at, 3), "dur": round(dur, 3), "end": round(at + dur, 3)}
-            for name, at, dur in order
-            if not name.startswith("pad") and name not in ("lead", "tail")
-        ],
+        "speeds": {"zh": args.speed_zh, "en": args.speed_en, "ru": args.speed_ru},
+        "leadIn": round(LEAD_IN, 3),
+        "tail": round(TAIL, 3),
+        "gaps": [round(gap, 3) for gap in gaps],
+        "cues": cues,
     }
 
-    make_samples.write_wav(args.out, track, TARGET_RATE)
-    manifest = os.path.splitext(args.out)[0] + ".sequence.json"
+    make_samples.write_wav(out, track, TARGET_RATE)
+    manifest = os.path.splitext(out)[0] + ".sequence.json"
     with open(manifest, "w", encoding="utf-8") as handle:
         json.dump(timeline, handle, ensure_ascii=False, indent=2)
 
     print("")
-    print("track   : %s" % args.out)
-    print("size    : %.1f KiB" % (os.path.getsize(args.out) / 1024.0))
+    print("track   : %s" % out)
+    print("size    : %.1f KiB" % (os.path.getsize(out) / 1024.0))
     print("manifest: %s" % manifest)
-    print("total   : %.2f s" % total)
+    print("speech  : %.2f s, gaps %s" % (speech, ", ".join("%.2f" % g for g in gaps)))
+    print("total   : %.2f s (target %.2f)" % (total, args.target))
     for cue in timeline["cues"]:
-        print("  %-12s %6.2fs -> %6.2fs" % (cue["name"], cue["at"], cue["end"]))
+        print("  %-8s %6.2fs -> %6.2fs" % (cue["name"], cue["at"], cue["end"]))
     return 0
 
 

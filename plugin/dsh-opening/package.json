@@ -17,6 +17,7 @@
     "cordis.patch.yml",
     "assets/*.wav",
     "assets/*.json",
+    "assets/*.png",
     "locale/*.json",
     "icon.svg"
   ],

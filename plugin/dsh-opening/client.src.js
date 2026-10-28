@@ -2,13 +2,15 @@
  * @local/dsh-opening — Client half.
  *
  * Registers one entry into `shell.overlay` (a frame-wide, click-through layer)
- * and plays the boot sequence there: a particle field, five access-protocol
- * steps spoken in Chinese, then a salute in Russian, Chinese and English.
+ * and plays the boot sequence there: the whale mark surfaces and sinks back
+ * into the dark, twin broken rings turn behind it, a particle field breathes,
+ * five access-protocol steps type themselves out one at a time, then a salute
+ * in the same language, then everything dissolves.
  *
  * The voice is a pre-rendered track. `tools\build-client.mjs` inlines it as a
- * data URI at the top of the generated client.js, so the browser needs no host
- * route and the animation never depends on the HTTP server being present. CUE
- * below is the track's own timeline, so the visuals follow the audio.
+ * data URI at the top of the generated client.js together with the matching
+ * timeline and the mark, so the browser needs no host route and the visuals
+ * always follow the audio the file actually carries.
  */
 window.__ModuleLoader__.load({
   id: '@local/dsh-opening',
@@ -18,7 +20,6 @@ window.__ModuleLoader__.load({
     const { useState, useEffect, useRef } = React;
 
     const NS = 'dsh-opening';
-    const TRACK = window.__DSH_OPENING_TRACK__ || '/dsh-opening/asset/boot.wav';
 
     /** Text projected where the slot owner draws a label. */
     const DICT = {
@@ -27,27 +28,29 @@ window.__ModuleLoader__.load({
     };
 
     /**
-     * The audio timeline, copied from assets/boot.sequence.json.
-     * Times are seconds from the moment the track starts.
+     * Fallback timeline, used only when the file is loaded without a build.
+     * A real build overwrites this from assets/boot-<lang>.sequence.json.
      */
-    const CUE = {
-      total: 17.99,
-      steps: [
-        { at: 0.9, end: 1.98, zh: '需要访问许可', en: 'ACCESS PERMISSION REQUIRED' },
-        { at: 2.6, end: 3.76, zh: '身份资料确认', en: 'IDENTITY VERIFICATION' },
-        { at: 4.38, end: 5.54, zh: '接受访问需求', en: 'ACCESS REQUEST ACCEPTED' },
-        { at: 6.16, end: 7.28, zh: '开始读取权限', en: 'PERMISSION READ STARTED' },
-        { at: 7.9, end: 9.38, zh: '读取完毕 · 核验通过', en: 'READ COMPLETE · VERIFIED' },
-      ],
-      finale: [
-        { lang: 'ru', at: 10.28, end: 12.09, text: 'ДОБРО ПОЖАЛОВАТЬ, ТОВАРИЩ' },
-        { lang: 'zh', at: 12.64, end: 14.05, text: '欢迎回来，指挥员' },
-        { lang: 'en', at: 14.6, end: 15.94, text: 'WELCOME BACK, COMMANDER' },
-      ],
+    const FALLBACK_CUE = {
+      lang: 'zh',
+      total: 18,
+      leadIn: 2.6,
       fadeOut: 0.52,
+      steps: [
+        { at: 2.6, end: 3.9, zh: '需要访问许可', en: 'ACCESS PERMISSION REQUIRED' },
+        { at: 4.7, end: 6.0, zh: '身份资料确认', en: 'IDENTITY VERIFICATION' },
+        { at: 6.8, end: 8.1, zh: '接受访问需求', en: 'ACCESS REQUEST ACCEPTED' },
+        { at: 8.9, end: 10.2, zh: '开始读取权限', en: 'PERMISSION READ STARTED' },
+        { at: 11.0, end: 12.4, zh: '读取完毕 · 核验通过', en: 'READ COMPLETE · VERIFIED' },
+      ],
+      salute: { lang: 'zh', at: 13.3, end: 14.8, text: '欢迎回来，指挥员' },
     };
 
-    const FINALE_AT = CUE.finale[0].at;
+    const CUE = window.__DSH_OPENING_CUE__ || FALLBACK_CUE;
+    const TRACK = window.__DSH_OPENING_TRACK__ || '';
+    const MARK = window.__DSH_OPENING_MARK__ || '';
+    const SALUTE = Array.isArray(CUE.salute) ? CUE.salute[0] : CUE.salute;
+    const LEAD_IN = CUE.leadIn || CUE.steps[0].at;
     const LAST_STEP = CUE.steps.length - 1;
 
     const PALETTE = {
@@ -57,6 +60,7 @@ window.__ModuleLoader__.load({
       rule: 'rgba(11, 13, 16, 0.14)',
       accent: '#3d86c6',
       particle: '127, 182, 232',
+      faint: 'rgba(11, 13, 16, 0.28)',
     };
 
     /* ---- helpers -------------------------------------------------------- */
@@ -75,25 +79,21 @@ window.__ModuleLoader__.load({
 
     /** Where the sequence stands at `t` seconds into the track. */
     function stageAt(t) {
-      if (t < CUE.steps[0].at) return { phase: -1, active: -1 };
-      if (t < FINALE_AT) {
+      if (t < CUE.steps[0].at) return { phase: -1, salute: false };
+      if (t < SALUTE.at) {
         let phase = 0;
         for (let i = 0; i < CUE.steps.length; i++) {
           if (t >= CUE.steps[i].at) phase = i;
         }
-        return { phase, active: -1 };
+        return { phase, salute: false };
       }
-      let active = -1;
-      for (let i = 0; i < CUE.finale.length; i++) {
-        if (t >= CUE.finale[i].at) active = i;
-      }
-      return { phase: CUE.steps.length, active };
+      return { phase: CUE.steps.length, salute: true };
     }
 
     /**
      * A drifting particle field with proximity links — the 流浪地球 line work,
-     * reduced to its cheapest honest version: dots that tethers draw themselves
-     * between. All state lives in this closure; the caller resizes and draws.
+     * reduced to its cheapest honest version: dots that draw their own tethers.
+     * All state lives in this closure; the caller resizes and draws.
      */
     function makeField(canvas) {
       const ctx = canvas.getContext('2d');
@@ -109,7 +109,7 @@ window.__ModuleLoader__.load({
           vx: (Math.random() - 0.5) * 0.000045,
           vy: (Math.random() - 0.5) * 0.000045,
           r: 0.55 + Math.random() * 1.75,
-          a: 0.14 + Math.random() * 0.52,
+          a: 0.12 + Math.random() * 0.46,
         };
       }
 
@@ -120,12 +120,12 @@ window.__ModuleLoader__.load({
         canvas.width = Math.max(1, Math.round(w * dpr));
         canvas.height = Math.max(1, Math.round(h * dpr));
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        const want = Math.max(24, Math.min(92, Math.round((w * h) / 24000)));
+        const want = Math.max(24, Math.min(88, Math.round((w * h) / 26000)));
         while (parts.length < want) parts.push(spawn());
         parts.length = want;
       }
 
-      function frame(dt, finale) {
+      function frame(dt, glow) {
         ctx.clearRect(0, 0, w, h);
         for (let i = 0; i < parts.length; i++) {
           const q = parts[i];
@@ -137,7 +137,7 @@ window.__ModuleLoader__.load({
           else if (q.y > 1.02) q.y = -0.02;
         }
 
-        const reach = 110 + finale * 160;
+        const reach = 104 + glow * 150;
         ctx.lineWidth = 0.6;
         for (let i = 0; i < parts.length; i++) {
           const a = parts[i];
@@ -149,7 +149,7 @@ window.__ModuleLoader__.load({
             const dy = ay - b.y * h;
             const d = Math.sqrt(dx * dx + dy * dy);
             if (d > reach) continue;
-            const alpha = (1 - d / reach) * 0.22;
+            const alpha = (1 - d / reach) * 0.2;
             ctx.strokeStyle = 'rgba(61, 134, 198, ' + alpha.toFixed(3) + ')';
             ctx.beginPath();
             ctx.moveTo(ax, ay);
@@ -179,7 +179,9 @@ window.__ModuleLoader__.load({
   z-index: 2147483;
   overflow: hidden;
   pointer-events: none;
-  background: var(--dshop-stage);
+  background:
+    radial-gradient(ellipse 58% 52% at 50% 46%, rgba(255, 255, 255, 0.92) 0%, rgba(247, 248, 250, 0) 62%),
+    var(--dshop-stage);
   color: var(--dshop-ink);
   font-family: "Segoe UI", "Microsoft YaHei", -apple-system, system-ui, sans-serif;
   opacity: 1;
@@ -204,9 +206,43 @@ window.__ModuleLoader__.load({
     linear-gradient(to bottom, var(--dshop-rule) 1px, transparent 1px);
   background-size: 64px 64px;
   background-position: center;
-  opacity: 0.5;
-  -webkit-mask-image: radial-gradient(ellipse 72% 64% at 50% 50%, #000 26%, transparent 76%);
-  mask-image: radial-gradient(ellipse 72% 64% at 50% 50%, #000 26%, transparent 76%);
+  opacity: 0.42;
+  -webkit-mask-image: radial-gradient(ellipse 70% 62% at 50% 50%, #000 22%, transparent 74%);
+  mask-image: radial-gradient(ellipse 70% 62% at 50% 50%, #000 22%, transparent 74%);
+}
+
+.dshop-rings {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(76vmin, 720px);
+  height: min(76vmin, 720px);
+  transform: translate(-50%, -50%);
+  overflow: visible;
+}
+.dshop-ring circle {
+  fill: none;
+  stroke: var(--dshop-rule);
+  stroke-linecap: round;
+}
+.dshop-ring { transform-box: fill-box; transform-origin: center; }
+.dshop-ring.a { animation: dshop-spin 52s linear infinite; }
+.dshop-ring.a circle { stroke: rgba(61, 134, 198, 0.42); stroke-width: 1.1; stroke-dasharray: 300 190; }
+.dshop-ring.b { animation: dshop-spin-rev 34s linear infinite; }
+.dshop-ring.b circle { stroke: rgba(11, 13, 16, 0.34); stroke-width: 1.7; stroke-dasharray: 150 233; }
+.dshop-ring.c { animation: dshop-spin 96s linear infinite; }
+.dshop-ring.c circle { stroke: rgba(11, 13, 16, 0.16); stroke-width: 1; stroke-dasharray: 3 27; }
+
+.dshop-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(84px, 10.5vmin, 128px);
+  height: auto;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: dshop-mark var(--dshop-lead) cubic-bezier(0.33, 0, 0.2, 1) both;
+  filter: drop-shadow(0 10px 26px rgba(11, 13, 16, 0.16));
 }
 
 .dshop-tick {
@@ -214,7 +250,7 @@ window.__ModuleLoader__.load({
   width: 18px;
   height: 18px;
   border: 1px solid var(--dshop-ink);
-  opacity: 0.55;
+  opacity: 0.5;
 }
 .dshop-tick.tl { top: 18px; left: 18px; border-right: 0; border-bottom: 0; }
 .dshop-tick.tr { top: 18px; right: 18px; border-left: 0; border-bottom: 0; }
@@ -280,27 +316,18 @@ window.__ModuleLoader__.load({
   animation: dshop-blink 1.05s steps(1, end) infinite;
 }
 
-.dshop-finale { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.dshop-finale div {
-  transition: opacity 0.32s ease, color 0.32s ease, letter-spacing 0.32s ease;
-}
-.dshop-finale .f-ru,
-.dshop-finale .f-en {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: clamp(10px, 1.05vw, 13px);
-  letter-spacing: 0.34em;
-  color: var(--dshop-faint);
-}
-.dshop-finale .f-zh {
-  font-size: clamp(26px, 3.6vw, 46px);
-  font-weight: 500;
+.dshop-salute {
+  animation: dshop-rise 0.66s cubic-bezier(0.2, 0.72, 0.2, 1) both;
   letter-spacing: 0.18em;
-  color: var(--dshop-faint);
 }
-.dshop-finale .is-live { color: var(--dshop-ink); }
-.dshop-finale .is-live.f-ru,
-.dshop-finale .is-live.f-en { letter-spacing: 0.42em; }
-.dshop-finale .f-zh.is-live { letter-spacing: 0.24em; }
+.dshop-salute.zh { font-size: clamp(26px, 3.6vw, 46px); font-weight: 500; }
+.dshop-salute.en,
+.dshop-salute.ru {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: clamp(13px, 1.5vw, 18px);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
 
 .dshop-log {
   position: absolute;
@@ -355,17 +382,42 @@ window.__ModuleLoader__.load({
   0%, 55% { opacity: 1; }
   56%, 100% { opacity: 0.12; }
 }
+@keyframes dshop-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes dshop-spin-rev {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+@keyframes dshop-mark {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.93); filter: blur(7px) drop-shadow(0 10px 26px rgba(11, 13, 16, 0.12)); }
+  26%  { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0) drop-shadow(0 10px 26px rgba(11, 13, 16, 0.18)); }
+  64%  { opacity: 1; transform: translate(-50%, -50%) scale(1.015); filter: blur(0) drop-shadow(0 10px 26px rgba(11, 13, 16, 0.18)); }
+  100% { opacity: 0; transform: translate(-50%, -54%) scale(1.05); filter: blur(5px) drop-shadow(0 10px 26px rgba(11, 13, 16, 0.1)); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .dshop-root, .dshop-root * { animation: none !important; transition: opacity 0.2s linear !important; }
+  .dshop-mark { opacity: 0; }
 }
 `;
 
     /* ---- component ------------------------------------------------------ */
 
+    function Rings() {
+      return h(
+        'svg',
+        { className: 'dshop-rings', viewBox: '0 0 200 200', 'aria-hidden': 'true' },
+        h('g', { className: 'dshop-ring c' }, h('circle', { cx: 100, cy: 100, r: 92 })),
+        h('g', { className: 'dshop-ring a' }, h('circle', { cx: 100, cy: 100, r: 78 })),
+        h('g', { className: 'dshop-ring b' }, h('circle', { cx: 100, cy: 100, r: 61 })),
+      );
+    }
+
     function Stage() {
       const [phase, setPhase] = useState(-1);
-      const [active, setActive] = useState(-1);
+      const [salute, setSalute] = useState(false);
       const [leaving, setLeaving] = useState(false);
       const [gone, setGone] = useState(false);
       const canvasRef = useRef(null);
@@ -383,7 +435,7 @@ window.__ModuleLoader__.load({
         let raf = 0;
         const timers = new Set();
         let phaseRef = -1;
-        let activeRef = -1;
+        let saluteRef = false;
 
         const later = (fn, ms) => {
           const id = setTimeout(() => {
@@ -400,19 +452,22 @@ window.__ModuleLoader__.load({
           window.addEventListener('resize', field.resize);
         }
 
-        const track = new Audio(TRACK);
-        track.preload = 'auto';
-        track.volume = 0.95;
         const startedAt = window.performance.now();
-        const playAttempt = track.play();
-        if (playAttempt && typeof playAttempt.catch === 'function') {
-          playAttempt.catch(() => {
-            /* autoplay blocked or the asset is missing: the sequence stays silent */
-          });
+        let track = null;
+        if (TRACK) {
+          track = new Audio(TRACK);
+          track.preload = 'auto';
+          track.volume = 0.95;
+          const playAttempt = track.play();
+          if (playAttempt && typeof playAttempt.catch === 'function') {
+            playAttempt.catch(() => {
+              /* autoplay blocked: the sequence carries on silently */
+            });
+          }
         }
 
         const clock = () => {
-          if (!track.paused && track.currentTime > 0) return track.currentTime;
+          if (track && !track.paused && track.currentTime > 0) return track.currentTime;
           return (window.performance.now() - startedAt) / 1000;
         };
 
@@ -420,13 +475,14 @@ window.__ModuleLoader__.load({
           if (ending || disposed) return;
           ending = true;
           try {
-            track.pause();
-            track.currentTime = 0;
+            if (track) {
+              track.pause();
+              track.currentTime = 0;
+            }
           } catch (error) {
             /* nothing to stop */
           }
           setLeaving(true);
-          setPhase(CUE.steps.length);
           later(() => setGone(true), CUE.fadeOut * 1000 + 80);
         };
 
@@ -438,16 +494,16 @@ window.__ModuleLoader__.load({
           lastFrame = now;
 
           const t = clock();
-          if (field) field.frame(dt, clamp01((t - FINALE_AT) / 5.5));
+          if (field) field.frame(dt, clamp01((t - SALUTE.at + 1.6) / 6));
 
           const spot = stageAt(t);
           if (spot.phase !== phaseRef) {
             phaseRef = spot.phase;
             setPhase(spot.phase);
           }
-          if (spot.active !== activeRef) {
-            activeRef = spot.active;
-            setActive(spot.active);
+          if (spot.salute !== saluteRef) {
+            saluteRef = spot.salute;
+            setSalute(spot.salute);
           }
 
           if (counterRef.current) {
@@ -481,8 +537,10 @@ window.__ModuleLoader__.load({
           window.removeEventListener('pointerdown', onSkip, true);
           window.removeEventListener('keydown', onSkip, true);
           try {
-            track.pause();
-            track.removeAttribute('src');
+            if (track) {
+              track.pause();
+              track.removeAttribute('src');
+            }
           } catch (error) {
             /* the element is already gone */
           }
@@ -492,8 +550,8 @@ window.__ModuleLoader__.load({
       if (gone) return null;
 
       const step = phase >= 0 && phase <= LAST_STEP ? CUE.steps[phase] : null;
-      const inFinale = phase >= CUE.steps.length;
       const seen = CUE.steps.slice(0, Math.max(0, Math.min(phase + 1, CUE.steps.length)));
+      const leadIn = phase === -1;
 
       return h(
         'div',
@@ -503,14 +561,16 @@ window.__ModuleLoader__.load({
             '--dshop-stage': PALETTE.stage,
             '--dshop-ink': PALETTE.ink,
             '--dshop-dim': PALETTE.dim,
-            '--dshop-faint': 'rgba(11, 13, 16, 0.28)',
+            '--dshop-faint': PALETTE.faint,
             '--dshop-rule': PALETTE.rule,
             '--dshop-accent': PALETTE.accent,
             '--dshop-fade': CUE.fadeOut + 's',
+            '--dshop-lead': LEAD_IN + 's',
           },
         },
         h('style', { key: 'css' }, CSS),
         h('canvas', { key: 'field', ref: canvasRef, className: 'dshop-canvas' }),
+        h(Rings, { key: 'rings' }),
         h('div', { key: 'grid', className: 'dshop-grid' }),
         h('div', { key: 'tl', className: 'dshop-tick tl' }),
         h('div', { key: 'tr', className: 'dshop-tick tr' }),
@@ -523,23 +583,17 @@ window.__ModuleLoader__.load({
           h('span', { ref: counterRef, className: 'dshop-counter' }, '0000'),
           h('span', null, 'BOOT SEQUENCE'),
         ),
+        leadIn && MARK
+          ? h('img', { key: 'mark', className: 'dshop-mark', src: MARK, alt: '' })
+          : null,
         h(
           'div',
           { key: 'center', className: 'dshop-center' },
-          inFinale
+          salute
             ? h(
                 'div',
-                { className: 'dshop-finale', key: 'finale' },
-                CUE.finale.map((line, i) =>
-                  h(
-                    'div',
-                    {
-                      key: 'f-' + line.lang,
-                      className: 'f-' + line.lang + (active === i ? ' is-live' : ''),
-                    },
-                    line.text,
-                  ),
-                ),
+                { className: 'dshop-salute ' + (SALUTE.lang || 'zh'), key: 'salute' },
+                SALUTE.text,
               )
             : step
               ? h(
