@@ -49,7 +49,7 @@ LINES = {
         "text": [
             "需要访问许可",
             "身份资料确认",
-            "接受访问需求",
+            "接收访问需求",
             "开始读取权限",
             "读取完毕，核验通过",
             "欢迎回来，指挥员",
@@ -69,9 +69,9 @@ LINES = {
         "text": [
             "Access permission required.",
             "Identity verification.",
-            "Access request accepted.",
+            "Access request received.",
             "Permission read started.",
-            "Read complete. Verified.",
+            "Read complete. Verification passed.",
             "Welcome back, commander.",
         ],
         "slug": [
@@ -87,10 +87,10 @@ LINES = {
         "voice": "baya",
         "text": [
             "Требуется разрешение на доступ.",
-            "Проверка личности.",
+            "Подтверждение личности.",
             "Запрос на доступ принят.",
-            "Начинаю чтение прав.",
-            "Чтение завершено. Проверено.",
+            "Начато чтение прав.",
+            "Чтение завершено. Проверка пройдена.",
             "Добро пожаловать, товарищ.",
         ],
         "slug": [

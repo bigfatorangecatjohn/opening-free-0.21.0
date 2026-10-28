@@ -41,8 +41,8 @@
     {
       "name": "step1",
       "at": 2.6,
-      "dur": 1.077,
-      "end": 3.677,
+      "dur": 1.078,
+      "end": 3.678,
       "zh": "需要访问许可",
       "en": "Access permission required.",
       "text": {
@@ -53,7 +53,7 @@
     },
     {
       "name": "gap",
-      "at": 3.677,
+      "at": 3.678,
       "dur": 1.263,
       "end": 4.94
     },
@@ -67,69 +67,69 @@
       "text": {
         "zh": "身份资料确认",
         "en": "Identity verification.",
-        "ru": "Проверка личности."
+        "ru": "Подтверждение личности."
       }
     },
     {
       "name": "gap",
       "at": 6.102,
       "dur": 1.263,
-      "end": 7.364
+      "end": 7.365
     },
     {
       "name": "step3",
-      "at": 7.364,
+      "at": 7.365,
       "dur": 1.157,
-      "end": 8.521,
-      "zh": "接受访问需求",
-      "en": "Access request accepted.",
+      "end": 8.522,
+      "zh": "接收访问需求",
+      "en": "Access request received.",
       "text": {
-        "zh": "接受访问需求",
-        "en": "Access request accepted.",
+        "zh": "接收访问需求",
+        "en": "Access request received.",
         "ru": "Запрос на доступ принят."
       }
     },
     {
       "name": "gap",
-      "at": 8.521,
+      "at": 8.522,
       "dur": 1.263,
-      "end": 9.784
+      "end": 9.785
     },
     {
       "name": "step4",
-      "at": 9.784,
+      "at": 9.785,
       "dur": 1.123,
-      "end": 10.906,
+      "end": 10.907,
       "zh": "开始读取权限",
       "en": "Permission read started.",
       "text": {
         "zh": "开始读取权限",
         "en": "Permission read started.",
-        "ru": "Начинаю чтение прав."
+        "ru": "Начато чтение прав."
       }
     },
     {
       "name": "gap",
-      "at": 10.906,
+      "at": 10.907,
       "dur": 1.263,
-      "end": 12.169
+      "end": 12.17
     },
     {
       "name": "step5",
-      "at": 12.169,
+      "at": 12.17,
       "dur": 1.48,
-      "end": 13.649,
+      "end": 13.65,
       "zh": "读取完毕，核验通过",
-      "en": "Read complete. Verified.",
+      "en": "Read complete. Verification passed.",
       "text": {
         "zh": "读取完毕，核验通过",
-        "en": "Read complete. Verified.",
-        "ru": "Чтение завершено. Проверено."
+        "en": "Read complete. Verification passed.",
+        "ru": "Чтение завершено. Проверка пройдена."
       }
     },
     {
       "name": "gap",
-      "at": 13.649,
+      "at": 13.65,
       "dur": 1.831,
       "end": 15.481
     },
