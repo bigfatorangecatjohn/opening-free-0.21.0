@@ -36,6 +36,7 @@ window.__ModuleLoader__.load({
       total: 18,
       leadIn: 2.6,
       fadeOut: 0.52,
+      mark: { at: 1.4, dur: 1.2 },
       steps: [
         { at: 2.6, end: 3.9, zh: '需要访问许可', en: 'ACCESS PERMISSION REQUIRED' },
         { at: 4.7, end: 6.0, zh: '身份资料确认', en: 'IDENTITY VERIFICATION' },
@@ -226,11 +227,11 @@ window.__ModuleLoader__.load({
   stroke-linecap: round;
 }
 .dshop-ring { transform-box: fill-box; transform-origin: center; }
-.dshop-ring.a { animation: dshop-spin 52s linear infinite; }
+.dshop-ring.a { animation: dshop-spin 30s linear infinite; }
 .dshop-ring.a circle { stroke: rgba(61, 134, 198, 0.42); stroke-width: 1.1; stroke-dasharray: 300 190; }
-.dshop-ring.b { animation: dshop-spin-rev 34s linear infinite; }
+.dshop-ring.b { animation: dshop-spin-rev 19s linear infinite; }
 .dshop-ring.b circle { stroke: rgba(11, 13, 16, 0.34); stroke-width: 1.7; stroke-dasharray: 150 233; }
-.dshop-ring.c { animation: dshop-spin 96s linear infinite; }
+.dshop-ring.c { animation: dshop-spin 55s linear infinite; }
 .dshop-ring.c circle { stroke: rgba(11, 13, 16, 0.16); stroke-width: 1; stroke-dasharray: 3 27; }
 
 .dshop-mark {
@@ -241,7 +242,7 @@ window.__ModuleLoader__.load({
   height: auto;
   transform: translate(-50%, -50%);
   opacity: 0;
-  animation: dshop-mark var(--dshop-lead) cubic-bezier(0.33, 0, 0.2, 1) both;
+  animation: dshop-mark var(--dshop-mark-dur) cubic-bezier(0.33, 0, 0.2, 1) var(--dshop-mark-delay) both;
   filter: drop-shadow(0 10px 26px rgba(11, 13, 16, 0.16));
 }
 
@@ -566,6 +567,8 @@ window.__ModuleLoader__.load({
             '--dshop-accent': PALETTE.accent,
             '--dshop-fade': CUE.fadeOut + 's',
             '--dshop-lead': LEAD_IN + 's',
+            '--dshop-mark-dur': (CUE.mark ? CUE.mark.dur : 1.2) + 's',
+            '--dshop-mark-delay': (CUE.mark ? CUE.mark.at : 1.4) + 's',
           },
         },
         h('style', { key: 'css' }, CSS),

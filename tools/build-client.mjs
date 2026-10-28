@@ -61,6 +61,7 @@ const cue = {
   total: manifest.total,
   leadIn: manifest.leadIn,
   fadeOut: 0.52,
+  mark: manifest.mark,
   steps,
   salute: { lang: salute.lang, at: salute.at, end: salute.end, text: salute.text },
 };

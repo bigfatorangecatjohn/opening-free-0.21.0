@@ -81,6 +81,34 @@ def seconds(block):
     return block.size / float(TARGET_RATE)
 
 
+def beep(rate, freq=987.77, dur=0.20, decay=9.0, gain=0.42):
+    """One machine chime: a bright fundamental with two soft partials.
+
+    The attack is fast and the tail is exponential, so it reads as a computer
+    prompt rather than a musical note.
+    """
+    count = int(round(rate * dur))
+    t = np.arange(count, dtype=np.float64) / rate
+    env = np.exp(-decay * t) * (1.0 - np.exp(-260.0 * t))
+    tone = (
+        np.sin(2.0 * np.pi * freq * t)
+        + 0.35 * np.sin(2.0 * np.pi * freq * 2.02 * t)
+        + 0.18 * np.sin(2.0 * np.pi * freq * 3.01 * t)
+    )
+    return (tone * env * gain).astype(np.float32)
+
+
+def beeps(rate, count=3, gap=0.20, **kwargs):
+    """`ding ding ding` — the three-note prompt that opens the sequence."""
+    one = beep(rate, **kwargs)
+    pad = np.zeros(int(round(rate * gap)), dtype=np.float32)
+    parts = []
+    for _index in range(count):
+        parts.append(one)
+        parts.append(pad)
+    return np.concatenate(parts)
+
+
 class Voice:
     """One renderer per engine, loaded once."""
 
@@ -177,7 +205,13 @@ def main(argv):
             order.append((label, at, seconds(block)))
         return at
 
-    push(silence(LEAD_IN), "lead")
+    # Lead-in: three chimes, then the mark surfaces as the last one rings out.
+    lead_head = silence(0.06)
+    chime = beeps(TARGET_RATE)
+    lead_tail = silence(max(0.0, LEAD_IN - seconds(lead_head) - seconds(chime)))
+    mark_at = round(seconds(lead_head) + seconds(chime) - 0.28, 3)
+    mark_dur = round(LEAD_IN - mark_at, 3)
+    push(np.concatenate([lead_head, chime, lead_tail]), "lead")
     for index, block in enumerate(steps):
         push(block, "step%d" % (index + 1))
         push(silence(gaps[index]), "gap")
@@ -216,6 +250,8 @@ def main(argv):
         "leadIn": round(LEAD_IN, 3),
         "tail": round(TAIL, 3),
         "gaps": [round(gap, 3) for gap in gaps],
+        "mark": {"at": mark_at, "dur": mark_dur},
+        "beeps": {"count": 3, "gap": 0.20, "freq": 987.77},
         "cues": cues,
     }
 

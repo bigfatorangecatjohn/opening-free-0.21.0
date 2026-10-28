@@ -2,7 +2,7 @@
   "lang": "en",
   "sampleRate": 24000,
   "total": 18.0,
-  "mech": 0.75,
+  "mech": 0.65,
   "speeds": {
     "zh": 1.15,
     "en": 1.0,
@@ -17,6 +17,15 @@
     1.12,
     1.624
   ],
+  "mark": {
+    "at": 0.98,
+    "dur": 1.62
+  },
+  "beeps": {
+    "count": 3,
+    "gap": 0.2,
+    "freq": 987.77
+  },
   "cues": [
     {
       "name": "step1",
@@ -30,62 +39,62 @@
       "name": "gap",
       "at": 4.08,
       "dur": 1.12,
-      "end": 5.201
+      "end": 5.2
     },
     {
       "name": "step2",
-      "at": 5.201,
-      "dur": 1.412,
-      "end": 6.613,
+      "at": 5.2,
+      "dur": 1.416,
+      "end": 6.616,
       "zh": "身份资料确认",
       "en": "Identity verification."
     },
     {
       "name": "gap",
-      "at": 6.613,
+      "at": 6.616,
       "dur": 1.12,
-      "end": 7.733
+      "end": 7.735
     },
     {
       "name": "step3",
-      "at": 7.733,
+      "at": 7.735,
       "dur": 1.487,
-      "end": 9.22,
+      "end": 9.222,
       "zh": "接受访问需求",
       "en": "Access request accepted."
     },
     {
       "name": "gap",
-      "at": 9.22,
+      "at": 9.222,
       "dur": 1.12,
-      "end": 10.34
+      "end": 10.342
     },
     {
       "name": "step4",
-      "at": 10.34,
-      "dur": 1.319,
-      "end": 11.659,
+      "at": 10.342,
+      "dur": 1.318,
+      "end": 11.661,
       "zh": "开始读取权限",
       "en": "Permission read started."
     },
     {
       "name": "gap",
-      "at": 11.659,
+      "at": 11.661,
       "dur": 1.12,
-      "end": 12.779
+      "end": 12.78
     },
     {
       "name": "step5",
-      "at": 12.779,
+      "at": 12.78,
       "dur": 0.953,
-      "end": 13.732,
+      "end": 13.733,
       "zh": "读取完毕，核验通过",
       "en": "Read complete. Verified."
     },
     {
       "name": "gap",
-      "at": 13.732,
-      "dur": 1.624,
+      "at": 13.733,
+      "dur": 1.623,
       "end": 15.357
     },
     {
