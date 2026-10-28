@@ -36,6 +36,10 @@ SILERO_DIR = os.path.join(MODEL_DIR, "silero")
 SILERO_FILE = "v5_5_ru.pt"
 GAP_SECONDS = 0.45
 
+# Delivery speed per language. The operator asked for the Chinese voice at
+# 1.15x; the other two stay natural until he says otherwise.
+SPEED = {"zh": 1.15, "en": 1.0, "ru": 1.0}
+
 # The lines are the contract with client.js SEQ: five access steps, then the
 # closing salute in that language's own voice.
 LINES = {
@@ -137,6 +141,91 @@ def concat(parts, sample_rate):
     return np.concatenate(pieces) if pieces else np.zeros(0, dtype=np.float32)
 
 
+# Mechanical colour, 0..1. 0.5 is the level the operator settled on: the source
+# voice stays intelligible, but the timbre picks up the terminal's ring, grit
+# and band limit. Everything here is numpy, because the venv has no scipy.
+MECH_LEVEL = 0.5
+
+
+def trim(pcm, sample_rate, threshold=0.005, keep=0.02):
+    """Drop leading/trailing silence so steps butt together predictably."""
+    import numpy as np
+
+    data = np.asarray(pcm, dtype=np.float32).reshape(-1)
+    if data.size == 0:
+        return data
+    loud = np.nonzero(np.abs(data) > threshold)[0]
+    if loud.size == 0:
+        return data
+    pad = int(round(keep * sample_rate))
+    start = max(0, int(loud[0]) - pad)
+    end = min(data.size, int(loud[-1]) + pad)
+    return data[start:end]
+
+
+def band_limit(pcm, sample_rate, low=150.0, high=6400.0):
+    """Zero-phase high/low shelf pair done in the frequency domain."""
+    import numpy as np
+
+    data = np.asarray(pcm, dtype=np.float32).reshape(-1)
+    size = data.size
+    if size < 64:
+        return data
+    pad = 1024
+    padded = np.concatenate([np.zeros(pad, dtype=np.float32), data, np.zeros(pad, dtype=np.float32)])
+    spectrum = np.fft.rfft(padded)
+    freqs = np.fft.rfftfreq(padded.size, 1.0 / float(sample_rate))
+    gain = np.clip((freqs - low * 0.55) / (low * 0.55), 0.0, 1.0)
+    gain = gain * np.clip((high * 1.45 - freqs) / (high * 0.45), 0.0, 1.0)
+    filtered = np.fft.irfft(spectrum * gain, n=padded.size)
+    return filtered[pad:pad + size].astype(np.float32)
+
+
+def sample_hold(pcm, factor):
+    """Hold every `factor` samples: the cheap, honest kind of grit."""
+    import numpy as np
+
+    data = np.asarray(pcm, dtype=np.float32).reshape(-1)
+    if factor <= 1 or data.size == 0:
+        return data
+    index = (np.arange(data.size) // factor) * factor
+    return data[np.clip(index, 0, data.size - 1)]
+
+
+def quantize(pcm, bits):
+    import numpy as np
+
+    levels = float(1 << (bits - 1))
+    return (np.round(np.asarray(pcm, dtype=np.float32) * levels) / levels).astype(np.float32)
+
+
+def mech(pcm, sample_rate, level=MECH_LEVEL):
+    """Bake the synthetic-terminal timbre in. level 0 leaves the voice alone."""
+    import numpy as np
+
+    data = trim(pcm, sample_rate)
+    if level <= 0 or data.size == 0:
+        return data
+    strength = float(max(0.0, min(1.0, level)))
+
+    out = band_limit(data, sample_rate)
+    time = np.arange(out.size, dtype=np.float32) / float(sample_rate)
+    depth = 0.30 * strength
+    out = out * (1.0 - depth + depth * np.cos(2.0 * np.pi * 97.0 * time))
+    out = sample_hold(out, int(round(1.0 + 2.0 * strength)))
+    out = quantize(out, int(round(16.0 - 6.0 * strength)))
+
+    edge = min(out.size, int(round(0.006 * sample_rate)))
+    if edge > 1:
+        ramp = np.linspace(0.0, 1.0, edge, dtype=np.float32)
+        out[:edge] *= ramp
+        out[-edge:] *= ramp[::-1]
+    peak = float(np.max(np.abs(out))) if out.size else 0.0
+    if peak > 0:
+        out = out / peak * 0.89
+    return out.astype(np.float32)
+
+
 def patch_local_models():
     """Point huggingface_hub's download helper at .models\\kokoro."""
     import huggingface_hub
@@ -159,7 +248,7 @@ def patch_local_models():
             module.hf_hub_download = local_hub_download
 
 
-def kokoro_lines(lang, texts):
+def kokoro_lines(lang, texts, speed=1.0):
     """Yield (samples, sample_rate) for each text using Kokoro."""
     import numpy as np
 
@@ -171,7 +260,7 @@ def kokoro_lines(lang, texts):
     for text in texts:
         chunks = []
         sample_rate = 24000
-        for _gs, _ps, audio in pipeline(text, voice=spec["voice"], speed=1.0):
+        for _gs, _ps, audio in pipeline(text, voice=spec["voice"], speed=speed):
             array = audio.detach().cpu().numpy() if hasattr(audio, "detach") else np.asarray(audio)
             chunks.append(np.asarray(array, dtype=np.float32).reshape(-1))
         yield (np.concatenate(chunks) if chunks else np.zeros(0, dtype=np.float32), sample_rate)
@@ -204,7 +293,15 @@ def main(argv):
     parser = argparse.ArgumentParser(description="Render boot-sequence voice samples.")
     parser.add_argument("--langs", default="zh,en,ru", help="comma separated: zh,en,ru")
     parser.add_argument("--ru-voice", default="baya", help="baya | kseniya | xenia | aidar | eugene")
+    parser.add_argument("--mech", type=float, default=MECH_LEVEL, help="mechanical amount, 0..1")
+    parser.add_argument("--speed-zh", type=float, default=SPEED["zh"])
+    parser.add_argument("--speed-en", type=float, default=SPEED["en"])
+    parser.add_argument("--speed-ru", type=float, default=SPEED["ru"])
     args = parser.parse_args(argv)
+
+    SPEED["zh"] = args.speed_zh
+    SPEED["en"] = args.speed_en
+    SPEED["ru"] = args.speed_ru
 
     langs = [part.strip() for part in args.langs.split(",") if part.strip()]
     ensure_dirs()
@@ -220,7 +317,7 @@ def main(argv):
             if lang == "ru":
                 rendered = list(silero_lines(lang, spec["text"], args.ru_voice, silero_model()))
             else:
-                rendered = list(kokoro_lines(lang, spec["text"]))
+                rendered = list(kokoro_lines(lang, spec["text"], SPEED[lang]))
         except Exception as error:  # noqa: BLE001 - report and continue
             failures.append("%s: %s: %s" % (lang, type(error).__name__, error))
             continue
@@ -229,6 +326,7 @@ def main(argv):
         sample_rate = 24000
         for index, (samples, rate) in enumerate(rendered):
             sample_rate = rate
+            samples = mech(samples, rate, args.mech)
             slug = spec["slug"][index]
             path = os.path.join(WAV_DIR, "%s-%d-%s.wav" % (lang, index + 1, slug))
             write_wav(path, samples, rate)
