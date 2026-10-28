@@ -1,0 +1,6 @@
+step1: import misaki.en
+  classes: ['ADD_SYMBOLS', 'CONSONANTS', 'CURRENCIES', 'DIPHTHONGS', 'G2P', 'GB_VOCAB', 'LEXICON_ORDS', 'LINK_REGEX', 'Lexicon', 'List', 'MToken', 'NON_QUOTE_PUNCTS', 'ORDINALS', 'Optional', 'PRIMARY_STRESS', 'PUNCTS', 'PUNCT_TAGS', 'PUNCT_TAG_PHONEMES', 'SECONDARY_STRESS', 'STRESSES', 'SUBTOKEN_JUNKS', 'SYMBOLS', 'TokenContext', 'Tuple', 'US_TAUS', 'US_VOCAB', 'Union', 'VOWELS']
+step2: spacy model check
+  spacy 3.8.18
+  en_core_web_sm MISSING: OSError [E050] Can't find model 'en_core_web_sm'. It doesn't seem to be a Python package or a valid path to a data directory.
+step3: en.G2P()

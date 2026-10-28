@@ -84,9 +84,30 @@ WELCOME BACK, COMMANDER
 
 ## 待定
 
-- [ ] 你 选库（V3 / 各语种最优 / 先出样音再定）
-- [ ] 参考音来源（自带 default / 指定素材 / 自己录）
+- [x] 你 选库 → **各语种最优**（m00327：接受「像三个人」，先出样音再听）
+- [x] 参考音来源 → 不克隆，直接用各库自带女声
 - [ ] 机械感强度（0 = 纯自然人声，1 = 明显合成器）
+- [ ] 语速（当前 zh 约 2.6 s/句，比 EVA 慢，可能需要 1.1–1.2 倍速重生成）
+
+## 实际执行的路线（2026-10-29 落地，与上面「决定后的动作」有出入）
+
+沙箱边界推翻了两条原计划：**python 子进程只能写工作区内**，且**工作区内不能依赖删除**（ACL 有 `DENY(DC)`）。所以 HF / torch.hub 的缓存机制全部不可用，改为：
+
+- `tools/fetch-models.py` — 用 urllib + 本机代理把权重直接下到 `.models\`：Kokoro `config.json` / `kokoro-v1_0.pth` / `voices/af_heart.pt` / `voices/zf_xiaoyi.pt`（hf-mirror.com 优先），Silero `v5_5_ru.pt`（models.silero.ai，138.7 MiB）。**必须校验 Content-Length**：断流时 urllib 读到的就是干净的 EOF，只有比对数才能识别截断（第一次只落了 1.3 MiB 却报成功）。
+- `tools/install-spacy-model.py` — misaki 的英文 G2P 依赖 `en_core_web_sm`，缺失时 `en.G2P()` 会卡住而不是报错；spaCy 的 `download` 命令走 pip/网络不可用，改为下 wheel 后用 `zipfile.extractall(site-packages)` 直接装。
+- `tools/make-samples.py` — `patch_local_models()` 把 `hf_hub_download`（连同 `kokoro.model` / `kokoro.pipeline` 里的同名引用）指向 `.models\kokoro`；Silero 用 `torch.package.PackageImporter(...).load_pickle("tts_models", "model")` 加载，绕开 torch.hub。
+
+环境：`.venv-tts`（Python 3.12.14）含 torch 2.14.1 / kokoro 0.9.4 / misaki 0.9.4 / transformers 5.21.0 / soundfile 0.14.0 / omegaconf 2.4.0 / spacy 3.8.18 + en_core_web_sm 3.8.0。
+
+### 已出的样音（`samples\`，16-bit mono）
+
+| 文件 | 时长 | 采样率 | 说明 |
+|---|---|---|---|
+| `zh-full.wav` | 18.55 s | 24 kHz | `zf_xiaoyi`，五步 + 「欢迎回来，指挥员」，约 2.6 s/句 |
+| `en-full.wav` | 14.75 s | 24 kHz | `af_heart`（官方 A 级），约 2.1 s/句 |
+| `ru-full.wav` | 14.07 s | 48 kHz | Silero `baya`，约 1.9 s/句 |
+
+单句在 `samples\wav\<lang>-<n>-<slug>.wav`，句间 0.45 s 静音拼成整段，峰值统一归一化到 89%。
 
 ## 许可备注
 
