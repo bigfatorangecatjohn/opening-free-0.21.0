@@ -24,7 +24,7 @@ FFMPEG = os.path.join(ROOT, '.tmp', 'ffmpeg', 'ffmpeg-9.0.2-essentials_build', '
 DEMO = os.path.join(ROOT, 'demo')
 LANGS = ['zh', 'en', 'ru', 'ja']
 LEAD = 1.4
-SECONDS = 24.0
+SECONDS = float(os.environ.get('CAPTURE_SECONDS', '24.0'))
 
 user32 = ctypes.windll.user32
 kernel32 = ctypes.windll.kernel32
@@ -141,7 +141,7 @@ def main(argv):
     langs = [part.strip() for part in argv if part.strip()] or LANGS
     os.makedirs(DEMO, exist_ok=True)
     for lang in langs:
-        if lang not in LANGS:
+        if lang not in LANGS and not lang.endswith('-short'):
             raise SystemExit('unknown language ' + lang)
         print('=== %s ===' % lang, flush=True)
         build(lang)

@@ -36,7 +36,7 @@ const langs = (langFlag >= 0 ? argv[langFlag + 1] : ALL_KEYS.join(','))
 // writes that choice into the generated header and nothing else changes.
 const forceFlag = argv.indexOf('--force');
 const forced = forceFlag >= 0 ? String(argv[forceFlag + 1] || '').trim() : '';
-if (forced && !['zh', 'en', 'ru', 'ja'].includes(forced)) {
+if (forced && !ALL_KEYS.includes(forced)) {
   console.error('unknown --force language ' + forced);
   process.exit(1);
 }
