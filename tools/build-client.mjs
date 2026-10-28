@@ -46,15 +46,23 @@ if (!existsSync(markFile)) {
 
 /** One {lang, track, cue} entry per requested language. */
 function buildEntry(lang) {
-  const trackFile = join(assetsDir, 'boot-' + lang + '.wav');
+  // Prefer the compressed master: the same 18 s track is ~85 KB as Vorbis
+  // against ~844 KB as WAV, and this audio is inlined into the client.
+  const candidates = [
+    { file: join(assetsDir, 'boot-' + lang + '.ogg'), mime: 'audio/ogg' },
+    { file: join(assetsDir, 'boot-' + lang + '.wav'), mime: 'audio/wav' },
+  ];
   const cueFile = join(assetsDir, 'boot-' + lang + '.sequence.json');
-  for (const file of [trackFile, cueFile]) {
-    if (!existsSync(file)) {
-      console.error('missing input: ' + file);
-      process.exit(1);
-    }
+  const picked = candidates.find((candidate) => existsSync(candidate.file));
+  if (!picked) {
+    console.error('missing input: ' + candidates.map((candidate) => candidate.file).join(' or '));
+    process.exit(1);
   }
-  const audio = readFileSync(trackFile);
+  if (!existsSync(cueFile)) {
+    console.error('missing input: ' + cueFile);
+    process.exit(1);
+  }
+  const audio = readFileSync(picked.file);
   const manifest = JSON.parse(readFileSync(cueFile, 'utf8'));
   const steps = manifest.cues
     .filter((cue) => cue.name.startsWith('step'))
@@ -65,15 +73,15 @@ function buildEntry(lang) {
     process.exit(1);
   }
   if (steps.some((step) => !step.text || !step.text.zh)) {
-    console.error(lang + ': step cues need the tri-lingual `text` map');
+    console.error(lang + ': step cues need the multi-lingual `text` map');
     process.exit(1);
   }
   return {
     lang,
-    wav: audio,
+    audio,
     entry: {
       lang,
-      track: 'data:audio/wav;base64,' + audio.toString('base64'),
+      track: 'data:' + picked.mime + ';base64,' + audio.toString('base64'),
       cue: {
         lang: manifest.lang,
         total: manifest.total,
@@ -109,7 +117,7 @@ const kib = (value) => (value / 1024).toFixed(1) + ' KiB';
 const totalBytes = Buffer.byteLength(banner + source, 'utf8');
 console.log('langs   ' + built.map((item) => item.lang).join(', '));
 for (const item of built) {
-  console.log('track   ' + item.lang + '  ' + kib(item.wav.length) + ' -> inlined');
+  console.log('track   ' + item.lang + '  ' + kib(item.audio.length) + ' -> inlined');
 }
 console.log('mark    ' + kib(mark.length) + ' -> inlined');
 console.log('client  ' + kib(totalBytes) + ' (source ' + kib(Buffer.byteLength(source, 'utf8')) + ')');

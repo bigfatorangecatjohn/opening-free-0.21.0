@@ -16,6 +16,7 @@
     "client.src.js",
     "cordis.patch.yml",
     "assets/*.wav",
+    "assets/*.ogg",
     "assets/*.json",
     "assets/*.png",
     "locale/*.json",
