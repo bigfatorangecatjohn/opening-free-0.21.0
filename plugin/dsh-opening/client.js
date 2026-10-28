@@ -120,9 +120,11 @@ window.__ModuleLoader__.load({
       ink: '#0b0d10',
       dim: '#5b6672',
       rule: 'rgba(11, 13, 16, 0.14)',
-      accent: '#b0231b',
-      particle: '146, 134, 122',
-      link: '176, 35, 27',
+      accent: '#4d6bfe',
+      accentLit: '#a8bcff',
+      glow: '77, 107, 254',
+      particle: '134, 158, 255',
+      link: '77, 107, 254',
       faint: 'rgba(11, 13, 16, 0.28)',
     };
 
@@ -388,17 +390,39 @@ window.__ModuleLoader__.load({
   stroke-linecap: round;
 }
 .dshop-ring { transform-box: fill-box; transform-origin: center; }
-.dshop-ring.a { filter: drop-shadow(0 0 7px rgba(176, 35, 27, 0.16)); }
+.dshop-ring.a { filter: drop-shadow(0 0 6px rgba(77, 107, 254, 0.22)); }
 .dshop-ring.d { animation: dshop-spin-rev 88s linear infinite; }
 .dshop-ring.d circle { stroke: rgba(11, 13, 16, 0.2); stroke-width: 0.9; stroke-dasharray: 1 5.4; }
 .dshop-ring.a { animation: dshop-spin 30s linear infinite; }
-.dshop-ring.a circle { stroke: rgba(176, 35, 27, 0.38); stroke-width: 1.1; stroke-dasharray: 300 190; }
+.dshop-ring.a circle { stroke: url(#dshop-blue); stroke-width: 1.2; stroke-dasharray: 300 190; }
 .dshop-ring.b { animation: dshop-spin-rev 19s linear infinite; }
 .dshop-ring.b circle { stroke: rgba(11, 13, 16, 0.34); stroke-width: 1.7; stroke-dasharray: 150 233; }
 .dshop-ring.c { animation: dshop-spin 55s linear infinite; }
 .dshop-ring.c circle { stroke: rgba(11, 13, 16, 0.16); stroke-width: 1; stroke-dasharray: 3 27; }
 
-.dshop-rings { animation: dshop-soft-in 1.2s cubic-bezier(0.2, 0.72, 0.2, 1) 0.04s both; }
+.dshop-rings {
+  animation:
+    dshop-soft-in 1.2s cubic-bezier(0.2, 0.72, 0.2, 1) 0.04s both,
+    dshop-breathe 5.2s ease-in-out 1.2s infinite;
+}
+
+/* A soft blue field under the dial: rises with the dial, then lets go. */
+.dshop-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(78vmin, 760px);
+  height: min(78vmin, 760px);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(77, 107, 254, 0.16) 0%,
+    rgba(77, 107, 254, 0.055) 44%,
+    rgba(77, 107, 254, 0) 72%
+  );
+  animation: dshop-halo 5.2s ease-in-out 1.2s infinite;
+}
 
 .dshop-mark {
   position: absolute;
@@ -442,16 +466,19 @@ window.__ModuleLoader__.load({
 }
 
 .dshop-lang {
-  border: 1px solid var(--dshop-rule);
+  border: 1px solid rgba(77, 107, 254, 0.32);
   border-radius: 2px;
   padding: 1px 5px;
   letter-spacing: 0.14em;
-  color: var(--dshop-ink);
+  color: var(--dshop-accent);
+  text-shadow: 0 0 9px rgba(77, 107, 254, 0.35);
 }
 
 .dshop-counter {
   color: var(--dshop-accent);
   letter-spacing: 0.24em;
+  text-shadow: 0 0 10px rgba(77, 107, 254, 0.45);
+  animation: dshop-counter 5.2s ease-in-out 1.2s infinite;
 }
 
 .dshop-center {
@@ -504,7 +531,8 @@ window.__ModuleLoader__.load({
   height: 0.92em;
   margin-left: 0.34em;
   vertical-align: -0.08em;
-  background: var(--dshop-accent);
+  background: linear-gradient(to bottom, var(--dshop-accentLit), var(--dshop-accent));
+  box-shadow: 0 0 11px rgba(77, 107, 254, 0.55);
   animation: dshop-blink 1.05s steps(1, end) infinite;
 }
 
@@ -608,7 +636,7 @@ window.__ModuleLoader__.load({
 .dshop-progress i {
   display: block;
   height: 1px;
-  background: linear-gradient(to right, rgba(11, 13, 16, 0.45), var(--dshop-ink));
+  background: linear-gradient(to right, rgba(77, 107, 254, 0.2), var(--dshop-accent));
   transform: scaleX(0);
   transform-origin: left center;
   will-change: transform;
@@ -621,8 +649,8 @@ window.__ModuleLoader__.load({
   height: 5px;
   margin: -2px 0 0 -2px;
   border-radius: 50%;
-  background: var(--dshop-accent);
-  box-shadow: 0 0 7px rgba(176, 35, 27, 0.55);
+  background: var(--dshop-accentLit);
+  box-shadow: 0 0 11px rgba(77, 107, 254, 0.8);
   will-change: left;
 }
 
@@ -632,8 +660,12 @@ window.__ModuleLoader__.load({
   left: 0;
   right: 0;
   height: 3px;
-  background: repeating-linear-gradient(135deg, var(--dshop-accent) 0 7px, transparent 7px 15px);
-  opacity: 0.45;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(77, 107, 254, 0.6) 0 7px,
+    transparent 7px 15px
+  );
+  opacity: 0.3;
   animation: dshop-soft-in 1s ease 0.1s both;
 }
 
@@ -647,7 +679,7 @@ window.__ModuleLoader__.load({
   background: linear-gradient(
     to bottom,
     rgba(11, 13, 16, 0) 0%,
-    rgba(11, 13, 16, 0.055) 58%,
+    rgba(77, 107, 254, 0.05) 58%,
     rgba(11, 13, 16, 0) 100%
   );
   animation: dshop-scan 7.6s linear 0.5s infinite;
@@ -675,8 +707,8 @@ window.__ModuleLoader__.load({
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
   font-size: 9.5px;
   letter-spacing: 0.42em;
-  color: var(--dshop-dim);
-  opacity: 0.62;
+  color: var(--dshop-accent);
+  opacity: 0.66;
   animation: dshop-rise 0.5s cubic-bezier(0.2, 0.72, 0.2, 1) 0.12s both;
 }
 
@@ -686,7 +718,23 @@ window.__ModuleLoader__.load({
   font-size: 9.5px;
   letter-spacing: 0.44em;
   color: var(--dshop-accent);
-  opacity: 0.85;
+  opacity: 0.9;
+  text-shadow: 0 0 12px rgba(77, 107, 254, 0.45);
+}
+
+@keyframes dshop-breathe {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(77, 107, 254, 0.14)); }
+  50% { filter: drop-shadow(0 0 17px rgba(77, 107, 254, 0.6)); }
+}
+
+@keyframes dshop-halo {
+  0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.97); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+}
+
+@keyframes dshop-counter {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 1; }
 }
 
 @keyframes dshop-scan {
@@ -740,6 +788,17 @@ window.__ModuleLoader__.load({
       return h(
         'svg',
         { className: 'dshop-rings', viewBox: '0 0 200 200', 'aria-hidden': 'true' },
+        h(
+          'defs',
+          { key: 'defs' },
+          h(
+            'linearGradient',
+            { id: 'dshop-blue', x1: '0', y1: '0', x2: '1', y2: '1' },
+            h('stop', { offset: '0%', stopColor: '#4d6bfe' }),
+            h('stop', { offset: '46%', stopColor: '#a8bcff' }),
+            h('stop', { offset: '100%', stopColor: '#4d6bfe' }),
+          ),
+        ),
         h('g', { className: 'dshop-ring c' }, h('circle', { cx: 100, cy: 100, r: 95 })),
         h('g', { className: 'dshop-ring a' }, h('circle', { cx: 100, cy: 100, r: 83 })),
         h('g', { className: 'dshop-ring b' }, h('circle', { cx: 100, cy: 100, r: 71 })),
@@ -912,6 +971,7 @@ window.__ModuleLoader__.load({
         },
         h('style', { key: 'css' }, CSS),
         h('canvas', { key: 'field', ref: canvasRef, className: 'dshop-canvas' }),
+        h('div', { key: 'halo', className: 'dshop-halo' }),
         h(Rings, { key: 'rings' }),
         h('div', { key: 'grid', className: 'dshop-grid' }),
         h('div', { key: 'grain', className: 'dshop-grain' }),
