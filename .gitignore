@@ -20,3 +20,8 @@ samples/
 logs/*.out
 logs/*.err
 tmp*/
+
+demo/raw-*.mp4
+demo/seg-*.mp4
+demo/concat.txt
+demo/dsh-opening-demo.mp4

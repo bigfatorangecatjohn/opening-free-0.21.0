@@ -57,10 +57,13 @@ window.__ModuleLoader__.load({
         : [{ lang: 'zh', track: '', cue: FALLBACK_CUE }];
 
     const LANG_KEY = 'dsh-opening:lang';
+    // A demo build pins one language; normal builds leave the operator's pick alone.
+    const FORCED = String(window.__DSH_OPENING_FORCE_LANG__ || '');
     const LANGS = ['zh', 'en', 'ru', 'ja'];
 
     /** The language picked in Settings, or Chinese when nothing is stored. */
     function readLang() {
+      if (LANGS.indexOf(FORCED) >= 0) return FORCED;
       try {
         const stored = window.localStorage.getItem(LANG_KEY);
         return LANGS.indexOf(stored) >= 0 ? stored : 'zh';

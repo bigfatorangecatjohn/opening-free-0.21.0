@@ -30,6 +30,15 @@ const langs = (langFlag >= 0 ? argv[langFlag + 1] : 'zh,en,ru,ja')
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean);
+// Demo takes need one language to win over the stored preference; the flag
+// writes that choice into the generated header and nothing else changes.
+const forceFlag = argv.indexOf('--force');
+const forced = forceFlag >= 0 ? String(argv[forceFlag + 1] || '').trim() : '';
+if (forced && !['zh', 'en', 'ru', 'ja'].includes(forced)) {
+  console.error('unknown --force language ' + forced);
+  process.exit(1);
+}
+
 for (const lang of langs) {
   if (!['zh', 'en', 'ru', 'ja'].includes(lang)) {
     console.error('unknown language ' + lang + ' (expected zh, en, ru or ja)');
@@ -101,10 +110,15 @@ const banner = [
   '/* GENERATED FILE — edit client.src.js and run `node tools/build-client.mjs`. */',
   'window.__DSH_OPENING_SET__ = ' + JSON.stringify(built.map((item) => item.entry)) + ';',
   'window.__DSH_OPENING_MARK__ = ' + JSON.stringify('data:image/png;base64,' + mark.toString('base64')) + ';',
+  forced ? 'window.__DSH_OPENING_FORCE_LANG__ = ' + JSON.stringify(forced) + ';' : '',
   '',
-].join('\n');
+]
+  .filter((line, index, all) => !(line === '' && index === all.length - 2 && !forced))
+  .join('\n');
 
-for (const key of ['window.__DSH_OPENING_SET__', 'window.__DSH_OPENING_MARK__']) {
+const keys = ['window.__DSH_OPENING_SET__', 'window.__DSH_OPENING_MARK__'];
+if (forced) keys.push('window.__DSH_OPENING_FORCE_LANG__');
+for (const key of keys) {
   if (source.indexOf(key) < 0) {
     console.error('client.src.js never reads ' + key + '; the inline payload would be ignored.');
     process.exit(1);
@@ -115,7 +129,7 @@ writeFileSync(outputFile, banner + source, 'utf8');
 
 const kib = (value) => (value / 1024).toFixed(1) + ' KiB';
 const totalBytes = Buffer.byteLength(banner + source, 'utf8');
-console.log('langs   ' + built.map((item) => item.lang).join(', '));
+console.log('langs   ' + built.map((item) => item.lang).join(', ') + (forced ? '  (forced ' + forced + ')' : ''));
 for (const item of built) {
   console.log('track   ' + item.lang + '  ' + kib(item.audio.length) + ' -> inlined');
 }
