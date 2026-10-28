@@ -73,6 +73,8 @@
 - `node_modules\@local\dsh-opening` 是指向工作区的符号链接；
 - 客户端 `shell.overlay` 的 occupants 里出现 `id: dsh-opening, order: -1000, active: true`（HMR 直接生效，不用重启）。
 
+> **2026-10-28 改名**：插件从 `@local/dsh-opening` 改名为 `dsh-opening-free`（市场显示「开机动画 Free」），上一条判据里的名字随之作废。改名不是改字符串就行——profile 里 `dependencies` 的 `link:` 行的键、`dsh.profile.bundles` 的条目、`node_modules` 下的目录名三处都绑在包名上，所以必须 `plugin_manager remove_bundle` 旧名 + `install_bundle` 新路径（各约 1.5 分钟）。只改包内文件而不重装，会出现「bundle 列在 profile 里、行 id 已是新名、模块名却解析不到」的半死状态。
+
 **备份**（改 profile 前做的，回滚用）：`D:\DSH\Opening Design\.env-backup\2026-10-28\` 里有 `package.json`、`cordis.patch.yml`、`modules.yaml`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`。
 
 **一个读数不要被吓到**：install 成功那次 pnpm 会打印 `Packages: -48`，那是清理陈旧条目。装完复核：`node_modules` 顶层仍是 244 项，`dsh-infinite-gen-5` 仍是 52,698 文件。

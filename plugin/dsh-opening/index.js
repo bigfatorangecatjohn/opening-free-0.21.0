@@ -1,5 +1,5 @@
 /**
- * @local/dsh-opening — Host half.
+ * dsh-opening-free — Host half.
  *
  * Serves one static file, the boot-sequence audio track, at
  * `/dsh-opening/asset/boot.wav`. Nothing else: the animation itself is entirely
@@ -22,7 +22,7 @@ const TRACK_NAME = 'boot.wav';
 const TRACK_PATH = path.join(ASSET_DIR, TRACK_NAME);
 const TRACK_ROUTE = ROUTE_BASE + '/asset/' + TRACK_NAME;
 
-export const name = 'dsh-opening';
+export const name = 'dsh-opening-free';
 
 function resolveWebServer(ctx) {
   try {

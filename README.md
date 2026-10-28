@@ -12,7 +12,7 @@
 | 工作区 ACL 故障 | 已修复并复核（沙箱可写） |
 | 挂载位 | 已定为 `shell.overlay`（整帧、click-through、additive seat） |
 | 插件骨架 | 已就位，通过装前门禁 |
-| 安装 | **已装进 desktop profile**（`@local/dsh-opening` 0.1.0，宿主行 `application: applied`，`shell.overlay` 里已挂载） |
+| 安装 | **已装进 desktop profile**（`dsh-opening-free` 0.1.0，宿主行 `application: applied`，`shell.overlay` 里已挂载） |
 | 开机序列本体 | **占位版**（一缕发丝线 + 一个词 + 1.8 秒），等美术方向 |
 
 ## 目录
@@ -52,7 +52,7 @@ plugin_manager  action=install_bundle   target=D:\DSH\Opening Design\plugin\dsh-
 停用（保留安装，关掉效果）：
 
 ```
-plugin_manager  action=set_plugin   target=@local/dsh-opening   enabled=false
+plugin_manager  action=set_plugin   target=dsh-opening-free   enabled=false
 ```
 
 装完怎么算真的装上了：宿主行 `application: applied`（`cordis_inspect_query` 的 Config），浏览器里 `shell.overlay` 的 occupants 出现 `dsh-opening`（Slots），刷新页面能看到序列。视觉验证只能在你这台已登录的页面上做——按技能红线，不另起浏览器、不做 mock 截图。
