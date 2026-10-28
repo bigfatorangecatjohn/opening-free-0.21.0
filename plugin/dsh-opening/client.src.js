@@ -290,10 +290,12 @@ window.__ModuleLoader__.load({
   color: var(--dshop-ink);
   font-family: "Segoe UI", "Microsoft YaHei", -apple-system, system-ui, sans-serif;
   opacity: 1;
-  transition: opacity var(--dshop-fade) cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity var(--dshop-fade) cubic-bezier(0.4, 0, 0.2, 1),
+    transform var(--dshop-fade) cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-font-smoothing: antialiased;
 }
-.dshop-root.is-leaving { opacity: 0; }
+.dshop-root.is-leaving { opacity: 0; transform: scale(1.012); }
 
 .dshop-canvas {
   position: absolute;
@@ -301,6 +303,30 @@ window.__ModuleLoader__.load({
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* A sheet of paper, not a flat fill: grain gives the white some tooth. */
+.dshop-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: dshop-soft-in 1.5s ease 0.15s both;
+}
+
+.dshop-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 78% 70% at 50% 50%,
+    rgba(11, 13, 16, 0) 50%,
+    rgba(11, 13, 16, 0.07) 100%
+  );
+  animation: dshop-fade 1.8s ease both;
 }
 
 .dshop-grid {
@@ -331,12 +357,17 @@ window.__ModuleLoader__.load({
   stroke-linecap: round;
 }
 .dshop-ring { transform-box: fill-box; transform-origin: center; }
+.dshop-ring.a { filter: drop-shadow(0 0 7px rgba(61, 134, 198, 0.2)); }
+.dshop-ring.d { animation: dshop-spin-rev 88s linear infinite; }
+.dshop-ring.d circle { stroke: rgba(11, 13, 16, 0.2); stroke-width: 0.9; stroke-dasharray: 1 5.4; }
 .dshop-ring.a { animation: dshop-spin 30s linear infinite; }
 .dshop-ring.a circle { stroke: rgba(61, 134, 198, 0.42); stroke-width: 1.1; stroke-dasharray: 300 190; }
 .dshop-ring.b { animation: dshop-spin-rev 19s linear infinite; }
 .dshop-ring.b circle { stroke: rgba(11, 13, 16, 0.34); stroke-width: 1.7; stroke-dasharray: 150 233; }
 .dshop-ring.c { animation: dshop-spin 55s linear infinite; }
 .dshop-ring.c circle { stroke: rgba(11, 13, 16, 0.16); stroke-width: 1; stroke-dasharray: 3 27; }
+
+.dshop-rings { animation: dshop-soft-in 1.2s cubic-bezier(0.2, 0.72, 0.2, 1) 0.04s both; }
 
 .dshop-mark {
   position: absolute;
@@ -351,6 +382,7 @@ window.__ModuleLoader__.load({
 }
 
 .dshop-tick {
+  animation: dshop-shell 0.9s cubic-bezier(0.2, 0.72, 0.2, 1) 0.22s both;
   position: absolute;
   width: 18px;
   height: 18px;
@@ -363,6 +395,7 @@ window.__ModuleLoader__.load({
 .dshop-tick.br { bottom: 18px; right: 18px; border-left: 0; border-top: 0; }
 
 .dshop-topbar {
+  animation: dshop-shell 0.9s cubic-bezier(0.2, 0.72, 0.2, 1) 0.14s both;
   position: absolute;
   top: 26px;
   left: 34px;
@@ -404,6 +437,7 @@ window.__ModuleLoader__.load({
 .dshop-root.is-ru .dshop-zh { font-size: clamp(19px, 2.5vw, 33px); letter-spacing: 0.1em; }
 
 .dshop-zh {
+  text-wrap: balance;
   max-width: 62vmin;
   font-size: clamp(22px, 3.1vw, 40px);
   font-weight: 500;
@@ -444,8 +478,20 @@ window.__ModuleLoader__.load({
   color: var(--dshop-dim);
   animation: dshop-rise 0.6s cubic-bezier(0.2, 0.72, 0.2, 1) both;
 }
+.dshop-salute-rule {
+  width: clamp(46px, 7vw, 96px);
+  height: 1px;
+  margin: 15px auto 0;
+  background: linear-gradient(
+    to right,
+    rgba(11, 13, 16, 0) 0%,
+    rgba(11, 13, 16, 0.34) 50%,
+    rgba(11, 13, 16, 0) 100%
+  );
+  animation: dshop-fade 0.9s ease 0.24s both;
+}
 .dshop-salute-name {
-  margin-top: 12px;
+  margin-top: 13px;
   font-size: clamp(28px, 4.2vw, 54px);
   font-weight: 500;
   letter-spacing: 0.2em;
@@ -476,13 +522,24 @@ window.__ModuleLoader__.load({
   gap: 9px;
   animation: dshop-fade 0.4s ease both;
 }
+.dshop-logrow em {
+  font-style: normal;
+  color: rgba(11, 13, 16, 0.3);
+  letter-spacing: 0.06em;
+}
 .dshop-logrow i {
   font-style: normal;
   color: var(--dshop-accent);
   font-size: 9px;
 }
+.dshop-logrow b {
+  font-weight: 400;
+  color: rgba(11, 13, 16, 0.26);
+  letter-spacing: 0.06em;
+}
 
 .dshop-progress {
+  animation: dshop-shell 1s cubic-bezier(0.2, 0.72, 0.2, 1) 0.26s both;
   position: absolute;
   left: 34px;
   right: 34px;
@@ -490,13 +547,39 @@ window.__ModuleLoader__.load({
   height: 1px;
   background: var(--dshop-rule);
 }
+.dshop-progress::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -8px;
+  height: 5px;
+  opacity: 0.6;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(11, 13, 16, 0.26) 0 1px,
+    transparent 1px 4%
+  );
+}
 .dshop-progress i {
   display: block;
   height: 1px;
-  background: var(--dshop-ink);
+  background: linear-gradient(to right, rgba(11, 13, 16, 0.45), var(--dshop-ink));
   transform: scaleX(0);
   transform-origin: left center;
   will-change: transform;
+}
+.dshop-progress b {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--dshop-accent);
+  box-shadow: 0 0 7px rgba(61, 134, 198, 0.6);
+  will-change: left;
 }
 
 @keyframes dshop-rise {
@@ -506,6 +589,13 @@ window.__ModuleLoader__.load({
 @keyframes dshop-fade {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+@keyframes dshop-soft-in {
+  from { opacity: 0; }
+}
+@keyframes dshop-shell {
+  from { opacity: 0; transform: translateY(4px); }
+  to { transform: translateY(0); }
 }
 @keyframes dshop-blink {
   0%, 55% { opacity: 1; }
@@ -541,6 +631,7 @@ window.__ModuleLoader__.load({
         h('g', { className: 'dshop-ring c' }, h('circle', { cx: 100, cy: 100, r: 95 })),
         h('g', { className: 'dshop-ring a' }, h('circle', { cx: 100, cy: 100, r: 83 })),
         h('g', { className: 'dshop-ring b' }, h('circle', { cx: 100, cy: 100, r: 71 })),
+        h('g', { className: 'dshop-ring d' }, h('circle', { cx: 100, cy: 100, r: 64 })),
       );
     }
 
@@ -552,6 +643,7 @@ window.__ModuleLoader__.load({
       const canvasRef = useRef(null);
       const counterRef = useRef(null);
       const progressRef = useRef(null);
+      const headRef = useRef(null);
 
       useEffect(() => {
         if (prefersReducedMotion()) {
@@ -639,9 +731,12 @@ window.__ModuleLoader__.load({
             const counter = (Math.floor(t * 37.3) % 0xffff).toString(16).toUpperCase();
             counterRef.current.textContent = ('0000' + counter).slice(-4);
           }
+          const progress = clamp01(t / CUE.total);
           if (progressRef.current) {
-            progressRef.current.style.transform =
-              'scaleX(' + clamp01(t / CUE.total).toFixed(4) + ')';
+            progressRef.current.style.transform = 'scaleX(' + progress.toFixed(4) + ')';
+          }
+          if (headRef.current) {
+            headRef.current.style.left = (progress * 100).toFixed(3) + '%';
           }
 
           if (t >= CUE.total) {
@@ -703,6 +798,8 @@ window.__ModuleLoader__.load({
         h('canvas', { key: 'field', ref: canvasRef, className: 'dshop-canvas' }),
         h(Rings, { key: 'rings' }),
         h('div', { key: 'grid', className: 'dshop-grid' }),
+        h('div', { key: 'grain', className: 'dshop-grain' }),
+        h('div', { key: 'vignette', className: 'dshop-vignette' }),
         h('div', { key: 'tl', className: 'dshop-tick tl' }),
         h('div', { key: 'tr', className: 'dshop-tick tr' }),
         h('div', { key: 'bl', className: 'dshop-tick bl' }),
@@ -728,6 +825,7 @@ window.__ModuleLoader__.load({
                 Array.isArray(SALUTE.lines) && SALUTE.lines.length === 2
                   ? [
                       h('div', { key: 'lead', className: 'dshop-salute-lead' }, SALUTE.lines[0]),
+                      h('div', { key: 'rule', className: 'dshop-salute-rule' }),
                       h('div', { key: 'name', className: 'dshop-salute-name' }, SALUTE.lines[1]),
                     ]
                   : SALUTE.text,
@@ -753,12 +851,19 @@ window.__ModuleLoader__.load({
             h(
               'div',
               { key: 'log-' + i, className: 'dshop-logrow' },
+              h('em', null, ('0' + (i + 1)).slice(-2)),
               h('i', null, '✓'),
               h('span', null, line(row, LANG)),
+              h('b', null, row.at.toFixed(2) + 's'),
             ),
           ),
         ),
-        h('div', { key: 'bar', className: 'dshop-progress' }, h('i', { ref: progressRef })),
+        h(
+          'div',
+          { key: 'bar', className: 'dshop-progress' },
+          h('i', { ref: progressRef }),
+          h('b', { ref: headRef }),
+        ),
       );
     }
 

@@ -90,26 +90,27 @@ CHORDS = (
     (98.00, 146.83, 246.94, 293.66),    # G
 )
 
-NOTE_HZ = (1567.98, 1174.66, 1567.98, 1174.66)  # G6 / D6, a fourth apart
-NOTE_AT = (0.08, 0.31, 0.54, 0.77)
-MARK_AT = 1.10
+NOTE_HZ = (1760.00, 1318.51, 1760.00, 1318.51)  # A6 / E6, a fourth apart
+NOTE_AT = (0.08, 0.30, 0.52, 0.74)
+MARK_AT = 1.06
 
 
-def chime(rate, freq, dur=0.85, decay=3.1, gain=0.20):
-    """One water-drop bell: a rounded tone with a small downward glide.
+def chime(rate, freq, dur=0.62, decay=4.6, gain=0.16):
+    """One light droplet: higher, shorter and quieter than the first pass.
 
-    Compared with the previous triad this is a softer, lower-level strike: the
-    fundamental is untouched, only the octave is added at 0.09 and it decays
-    twice as fast, and the ~1.8% pitch sag right after the strike is what makes
-    it read as a drop landing instead of a beep.
+    "Soft but brisk" is a balance between level and tail: the strike is quiet
+    (0.16, down from 0.20) while the decay is cut short (0.62 s, decay 4.6) so
+    the note blooms and clears instead of hanging. The octave goes 0.09 -> 0.22
+    for sparkle, but nothing above the octave is added, so the 3 kHz band that
+    made the earlier triad harsh stays empty.
     """
     count = int(round(rate * dur))
     t = np.arange(count, dtype=np.float64) / rate
-    attack = np.minimum(1.0, t / 0.010)
-    glide = 1.0 + 0.018 * np.exp(-t / 0.05)
+    attack = np.minimum(1.0, t / 0.006)
+    glide = 1.0 + 0.026 * np.exp(-t / 0.04)
     phase = 2.0 * np.pi * freq * glide * t
     body = np.sin(phase) * np.exp(-decay * t)
-    octave = 0.09 * np.sin(2.0 * phase) * np.exp(-decay * 2.2 * t)
+    octave = 0.22 * np.sin(2.0 * phase) * np.exp(-decay * 1.7 * t)
     return ((body + octave) * attack * gain).astype(np.float32)
 
 
