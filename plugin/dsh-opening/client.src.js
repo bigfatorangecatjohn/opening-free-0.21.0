@@ -93,6 +93,18 @@ window.__ModuleLoader__.load({
     const LAST_STEP = CUE.steps.length - 1;
     const BADGE = LANG === 'zh' ? '中文' : LANG === 'en' ? 'EN' : 'RU';
 
+    /** Terminal furniture, one string per track language. */
+    const PROTOCOL = {
+      zh: '访问协议 · 第五级',
+      en: 'Access Protocol · Level V',
+      ru: 'Протокол Доступа · Уровень V',
+    };
+    const CAPTION = {
+      zh: '身份已确认 · 准入授予',
+      en: 'Identity Confirmed · Access Granted',
+      ru: 'Личность Подтверждена · Доступ Разрешён',
+    };
+
     /** One step in the active language, with the secondary line as fallback. */
     function line(step, lang) {
       if (step.text) return step.text[lang] || step.text.en || step.text.zh || '';
@@ -105,8 +117,9 @@ window.__ModuleLoader__.load({
       ink: '#0b0d10',
       dim: '#5b6672',
       rule: 'rgba(11, 13, 16, 0.14)',
-      accent: '#3d86c6',
-      particle: '127, 182, 232',
+      accent: '#b0231b',
+      particle: '146, 134, 122',
+      link: '176, 35, 27',
       faint: 'rgba(11, 13, 16, 0.28)',
     };
 
@@ -268,7 +281,7 @@ window.__ModuleLoader__.load({
             const d = Math.sqrt(dx * dx + dy * dy);
             if (d > span) continue;
             const alpha = (1 - d / span) * 0.2 * ea * envelope(b.life);
-            ctx.strokeStyle = 'rgba(61, 134, 198, ' + alpha.toFixed(3) + ')';
+            ctx.strokeStyle = 'rgba(' + PALETTE.link + ', ' + alpha.toFixed(3) + ')';
             ctx.beginPath();
             ctx.moveTo(ax, ay);
             ctx.lineTo(b.x * w, b.y * h);
@@ -372,11 +385,11 @@ window.__ModuleLoader__.load({
   stroke-linecap: round;
 }
 .dshop-ring { transform-box: fill-box; transform-origin: center; }
-.dshop-ring.a { filter: drop-shadow(0 0 7px rgba(61, 134, 198, 0.2)); }
+.dshop-ring.a { filter: drop-shadow(0 0 7px rgba(176, 35, 27, 0.16)); }
 .dshop-ring.d { animation: dshop-spin-rev 88s linear infinite; }
 .dshop-ring.d circle { stroke: rgba(11, 13, 16, 0.2); stroke-width: 0.9; stroke-dasharray: 1 5.4; }
 .dshop-ring.a { animation: dshop-spin 30s linear infinite; }
-.dshop-ring.a circle { stroke: rgba(61, 134, 198, 0.42); stroke-width: 1.1; stroke-dasharray: 300 190; }
+.dshop-ring.a circle { stroke: rgba(176, 35, 27, 0.38); stroke-width: 1.1; stroke-dasharray: 300 190; }
 .dshop-ring.b { animation: dshop-spin-rev 19s linear infinite; }
 .dshop-ring.b circle { stroke: rgba(11, 13, 16, 0.34); stroke-width: 1.7; stroke-dasharray: 150 233; }
 .dshop-ring.c { animation: dshop-spin 55s linear infinite; }
@@ -471,15 +484,16 @@ window.__ModuleLoader__.load({
 }
 
 .dshop-en {
-  padding-left: 0.4em;
-  margin-top: 14px;
+  padding-left: 0.26em;
+  margin-top: 15px;
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: clamp(9px, 0.95vw, 11.5px);
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
+  font-size: clamp(9.5px, 0.98vw, 12px);
+  letter-spacing: 0.26em;
   color: var(--dshop-dim);
   animation: dshop-rise 0.42s cubic-bezier(0.2, 0.72, 0.2, 1) 0.05s both;
 }
+.dshop-en::before { content: '[ '; opacity: 0.55; }
+.dshop-en::after { content: ' ]'; opacity: 0.55; }
 
 .dshop-caret {
   display: inline-block;
@@ -500,7 +514,6 @@ window.__ModuleLoader__.load({
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
   font-size: clamp(12px, 1.35vw, 16px);
   letter-spacing: 0.42em;
-  text-transform: uppercase;
   color: var(--dshop-dim);
   animation: dshop-rise 0.6s cubic-bezier(0.2, 0.72, 0.2, 1) both;
 }
@@ -606,8 +619,76 @@ window.__ModuleLoader__.load({
   margin: -2px 0 0 -2px;
   border-radius: 50%;
   background: var(--dshop-accent);
-  box-shadow: 0 0 7px rgba(61, 134, 198, 0.6);
+  box-shadow: 0 0 7px rgba(176, 35, 27, 0.55);
   will-change: left;
+}
+
+.dshop-hazard {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(135deg, var(--dshop-accent) 0 7px, transparent 7px 15px);
+  opacity: 0.45;
+  animation: dshop-soft-in 1s ease 0.1s both;
+}
+
+.dshop-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -200px;
+  height: 200px;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(11, 13, 16, 0) 0%,
+    rgba(11, 13, 16, 0.055) 58%,
+    rgba(11, 13, 16, 0) 100%
+  );
+  animation: dshop-scan 7.6s linear 0.5s infinite;
+}
+
+.dshop-frame {
+  position: absolute;
+  inset: 72px;
+  border: 1px solid rgba(11, 13, 16, 0.07);
+  animation: dshop-soft-in 1.1s ease 0.1s both;
+}
+.dshop-frame::before,
+.dshop-frame::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid rgba(11, 13, 16, 0.5);
+}
+.dshop-frame::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+.dshop-frame::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+
+.dshop-protocol {
+  margin-bottom: 20px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.42em;
+  color: var(--dshop-dim);
+  opacity: 0.62;
+  animation: dshop-rise 0.5s cubic-bezier(0.2, 0.72, 0.2, 1) 0.12s both;
+}
+
+.dshop-salute-cap {
+  margin-bottom: 14px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.44em;
+  color: var(--dshop-accent);
+  opacity: 0.85;
+}
+
+@keyframes dshop-scan {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(100vh + 400px)); }
 }
 
 @keyframes dshop-rise {
@@ -832,6 +913,9 @@ window.__ModuleLoader__.load({
         h('div', { key: 'grid', className: 'dshop-grid' }),
         h('div', { key: 'grain', className: 'dshop-grain' }),
         h('div', { key: 'vignette', className: 'dshop-vignette' }),
+        h('div', { key: 'scan', className: 'dshop-scan' }),
+        h('div', { key: 'frame', className: 'dshop-frame' }),
+        h('div', { key: 'hazard', className: 'dshop-hazard' }),
         h('div', { key: 'tl', className: 'dshop-tick tl' }),
         h('div', { key: 'tr', className: 'dshop-tick tr' }),
         h('div', { key: 'bl', className: 'dshop-tick bl' }),
@@ -839,10 +923,10 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { key: 'top', className: 'dshop-topbar' },
-          h('span', null, 'DSH · ACCESS CONTROL'),
+          h('span', null, 'DEEPSEEK HARNESS'),
           h('span', { className: 'dshop-lang' }, BADGE),
           h('span', { ref: counterRef, className: 'dshop-counter' }, '0000'),
-          h('span', null, 'BOOT SEQUENCE'),
+          h('span', null, 'ACCESS CONTROL'),
         ),
         leadIn && MARK
           ? h('img', { key: 'mark', className: 'dshop-mark', src: MARK, alt: '' })
@@ -856,6 +940,7 @@ window.__ModuleLoader__.load({
                 { className: 'dshop-salute ' + (SALUTE.lang || 'zh'), key: 'salute' },
                 Array.isArray(SALUTE.lines) && SALUTE.lines.length === 2
                   ? [
+                      h('div', { key: 'cap', className: 'dshop-salute-cap' }, CAPTION[LANG] || CAPTION.en),
                       h('div', { key: 'lead', className: 'dshop-salute-lead' }, SALUTE.lines[0]),
                       h('div', { key: 'rule', className: 'dshop-salute-rule' }),
                       h('div', { key: 'name', className: 'dshop-salute-name' }, SALUTE.lines[1]),
@@ -866,6 +951,7 @@ window.__ModuleLoader__.load({
               ? h(
                   'div',
                   { key: 'step-' + phase },
+                  h('div', { className: 'dshop-protocol' }, PROTOCOL[LANG] || PROTOCOL.en),
                   h(
                     'div',
                     { className: 'dshop-zh' },

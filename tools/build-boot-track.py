@@ -137,6 +137,26 @@ def chimes(rate, length, gain=0.20):
     return buffer + water_swell(rate, length)
 
 
+# What the screen shows. Spoken text stays sentence case (a TTS engine reads
+# ALL CAPS as initialisms), while the stage prints the military house style:
+# every word capitalised, and the closing salute in full caps.
+DISPLAY_STEPS = {
+    "zh": ["需要访问许可", "身份资料确认", "接收访问需求", "开始读取权限", "读取完毕，核验通过"],
+    "en": ["Access Permission Required", "Identity Verification",
+           "Access Request Received", "Permission Read Started",
+           "Read Complete · Verified"],
+    "ru": ["Требуется Разрешение На Доступ", "Подтверждение Личности",
+           "Запрос На Доступ Принят", "Начато Чтение Прав",
+           "Чтение Завершено. Проверка Пройдена"],
+}
+
+DISPLAY_SALUTE = {
+    "zh": "欢迎回来，指挥员",
+    "en": "WELCOME BACK, COMMANDER",
+    "ru": "ДОБРО ПОЖАЛОВАТЬ, ТОВАРИЩ",
+}
+
+
 def split_salute(text, lang):
     """Split the closing greeting into a lead line and the addressee line."""
     clean = text.strip()
@@ -322,8 +342,7 @@ def main(argv):
     display = {}
     for index in range(5):
         display["step%d" % (index + 1)] = {
-            "zh": make_samples.LINES["zh"]["text"][index],
-            "en": make_samples.LINES["en"]["text"][index],
+            code: DISPLAY_STEPS[code][index] for code in ("zh", "en", "ru")
         }
 
     cues = []
@@ -334,16 +353,14 @@ def main(argv):
         if name in display:
             cue.update(display[name])
         elif name == "salute":
-            cue.update({"lang": args.lang, "text": texts[5], "lines": split_salute(texts[5], args.lang)})
+            shown = DISPLAY_SALUTE[args.lang]
+            cue.update({"lang": args.lang, "text": shown, "lines": split_salute(shown, args.lang)})
         cues.append(cue)
 
     for cue in cues:
         if cue["name"].startswith("step"):
             index = int(cue["name"][4:]) - 1
-            cue["text"] = {
-                lang: make_samples.LINES[lang]["text"][index]
-                for lang in ("zh", "en", "ru")
-            }
+            cue["text"] = {code: DISPLAY_STEPS[code][index] for code in ("zh", "en", "ru")}
 
     timeline = {
         "lang": args.lang,

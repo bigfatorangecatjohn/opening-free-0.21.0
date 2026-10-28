@@ -47,8 +47,8 @@
       "en": "Access permission required.",
       "text": {
         "zh": "需要访问许可",
-        "en": "Access permission required.",
-        "ru": "Требуется разрешение на доступ."
+        "en": "Access Permission Required",
+        "ru": "Требуется Разрешение На Доступ"
       }
     },
     {
@@ -66,8 +66,8 @@
       "en": "Identity verification.",
       "text": {
         "zh": "身份资料确认",
-        "en": "Identity verification.",
-        "ru": "Подтверждение личности."
+        "en": "Identity Verification",
+        "ru": "Подтверждение Личности"
       }
     },
     {
@@ -85,8 +85,8 @@
       "en": "Access request received.",
       "text": {
         "zh": "接收访问需求",
-        "en": "Access request received.",
-        "ru": "Запрос на доступ принят."
+        "en": "Access Request Received",
+        "ru": "Запрос На Доступ Принят"
       }
     },
     {
@@ -104,8 +104,8 @@
       "en": "Permission read started.",
       "text": {
         "zh": "开始读取权限",
-        "en": "Permission read started.",
-        "ru": "Начато чтение прав."
+        "en": "Permission Read Started",
+        "ru": "Начато Чтение Прав"
       }
     },
     {
@@ -123,8 +123,8 @@
       "en": "Read complete. Verification passed.",
       "text": {
         "zh": "读取完毕，核验通过",
-        "en": "Read complete. Verification passed.",
-        "ru": "Чтение завершено. Проверка пройдена."
+        "en": "Read Complete · Verified",
+        "ru": "Чтение Завершено. Проверка Пройдена"
       }
     },
     {
@@ -139,10 +139,10 @@
       "dur": 1.343,
       "end": 16.7,
       "lang": "en",
-      "text": "Welcome back, commander.",
+      "text": "WELCOME BACK, COMMANDER",
       "lines": [
-        "Welcome back,",
-        "commander."
+        "WELCOME BACK,",
+        "COMMANDER"
       ]
     }
   ]
