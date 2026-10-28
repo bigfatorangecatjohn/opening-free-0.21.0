@@ -136,7 +136,11 @@
       "dur": 1.343,
       "end": 16.7,
       "lang": "en",
-      "text": "Welcome back, commander."
+      "text": "Welcome back, commander.",
+      "lines": [
+        "Welcome back,",
+        "commander."
+      ]
     }
   ]
 }

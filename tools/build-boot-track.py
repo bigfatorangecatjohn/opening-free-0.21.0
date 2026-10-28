@@ -116,6 +116,85 @@ def chimes(rate, length, gain=0.30):
     return buffer
 
 
+TOP_HZ = {"zh": 4000.0, "en": 4600.0, "ru": 4600.0}
+
+# Four slow chords, one per 4.5 s of an 18 s sequence: Am - F - C - G.
+CHORDS = (
+    (110.00, 164.81, 261.63, 329.63),
+    (87.31, 174.61, 261.63, 349.23),
+    (130.81, 196.00, 329.63, 392.00),
+    (98.00, 146.83, 246.94, 293.66),
+)
+
+
+def split_salute(text, lang):
+    """Split the closing greeting into a lead line and the addressee line."""
+    clean = text.strip()
+    if lang == "zh":
+        parts = clean.replace("，", ",").split(",")
+        if len(parts) >= 2:
+            return [parts[0].strip() + "，", ",".join(parts[1:]).strip()]
+        return [clean, ""]
+    parts = clean.rsplit(" ", 1)
+    if len(parts) == 2:
+        return [parts[0], parts[1]]
+    return [clean, ""]
+
+
+def music_bed(rate, length):
+    """A clean pad under the voice: sustained chords plus a soft arpeggio."""
+    total = int(round(rate * length))
+    t_all = np.arange(total, dtype=np.float64) / rate
+    out = np.zeros(total, dtype=np.float64)
+    span = length / len(CHORDS)
+    fade = 1.1
+    for index, chord in enumerate(CHORDS):
+        start = index * span
+        window = np.clip((t_all - start + fade) / (2.0 * fade), 0.0, 1.0)
+        window = window * np.clip((start + span + fade - t_all) / (2.0 * fade), 0.0, 1.0)
+        for freq in chord:
+            tone = np.sin(2.0 * np.pi * freq * t_all)
+            tone += 0.5 * np.sin(2.0 * np.pi * freq * 1.004 * t_all)
+            tone += 0.22 * np.sin(2.0 * np.pi * freq * 2.0 * t_all)
+            out += tone * window * 0.10
+
+    note_index = 0
+    for at in np.arange(0.55, length - 1.1, 0.45):
+        chord = CHORDS[int(at // span) % len(CHORDS)]
+        freq = chord[note_index % len(chord)] * 2.0
+        note_index += 1
+        count = int(round(rate * 0.55))
+        t = np.arange(count, dtype=np.float64) / rate
+        pluck = np.sin(2.0 * np.pi * freq * t) * np.exp(-6.0 * t)
+        start = int(round(rate * at))
+        stop = min(total, start + count)
+        if stop > start:
+            out[start:stop] += pluck[: stop - start] * 0.035
+
+    bed = make_samples.band_limit(out.astype(np.float32), rate, 60.0, 2600.0)
+    peak = float(np.max(np.abs(bed))) if bed.size else 0.0
+    if peak > 0:
+        bed = bed / peak
+    return bed.astype(np.float32)
+
+
+def duck_bed(voice, bed, rate, amount=0.62):
+    """Pull the bed down while the voice speaks, so it never fights the words."""
+    win = max(1, int(round(0.005 * rate)))
+    count = voice.size // win
+    if count < 4 or bed.size != voice.size:
+        return bed
+    blocks = np.abs(voice[: count * win]).reshape(count, win).max(axis=1)
+    smooth = max(3, int(round(0.30 * rate / win)))
+    kernel = np.hanning(smooth + 2)[1:-1]
+    kernel = kernel / kernel.sum()
+    blocks = np.convolve(blocks, kernel, mode="same")
+    centers = np.arange(count) * win + win * 0.5
+    env = np.interp(np.arange(voice.size), centers, blocks).astype(np.float32)
+    gain = 1.0 - amount * np.clip(env / 0.55, 0.0, 1.0)
+    return (bed * gain).astype(np.float32)
+
+
 class Voice:
     """One renderer per engine, loaded once."""
 
@@ -147,7 +226,7 @@ class Voice:
             )
             chunks.append(np.asarray(array, dtype=np.float32).reshape(-1))
         samples = np.concatenate(chunks) if chunks else np.zeros(0, dtype=np.float32)
-        return make_samples.mech(samples, 24000, self.mech_level)
+        return make_samples.mech(samples, 24000, self.mech_level, top=TOP_HZ.get(lang, 3800.0))
 
     def silero(self, lang, text):
         if self._silero is None:
@@ -159,7 +238,7 @@ class Voice:
             audio.detach().cpu().numpy() if hasattr(audio, "detach") else np.asarray(audio)
         )
         samples = resample_to(np.asarray(array, dtype=np.float32), 48000, TARGET_RATE)
-        return make_samples.mech(samples, TARGET_RATE, self.mech_level)
+        return make_samples.mech(samples, TARGET_RATE, self.mech_level, top=TOP_HZ.get(lang, 3800.0))
 
     def line(self, lang, text, speed=1.0):
         if lang == "ru":
@@ -225,6 +304,9 @@ def main(argv):
     track = np.concatenate(pieces).astype(np.float32)
     total = seconds(track)
 
+    bed = music_bed(TARGET_RATE, total)
+    track = track + 0.15 * duck_bed(track, bed, TARGET_RATE)
+
     # On-screen labels are always the bilingual pair (Chinese lead, English
     # subtitles) so the same layout works no matter which track is playing.
     display = {}
@@ -242,7 +324,7 @@ def main(argv):
         if name in display:
             cue.update(display[name])
         elif name == "salute":
-            cue.update({"lang": args.lang, "text": texts[5]})
+            cue.update({"lang": args.lang, "text": texts[5], "lines": split_salute(texts[5], args.lang)})
         cues.append(cue)
 
     for cue in cues:

@@ -81,7 +81,7 @@ function buildEntry(lang) {
         fadeOut: 0.52,
         mark: manifest.mark,
         steps,
-        salute: { lang: salute.lang, at: salute.at, end: salute.end, text: salute.text },
+        salute: { lang: salute.lang, at: salute.at, end: salute.end, text: salute.text, lines: salute.lines || null },
       },
     },
   };

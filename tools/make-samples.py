@@ -199,21 +199,32 @@ def quantize(pcm, bits):
     return (np.round(np.asarray(pcm, dtype=np.float32) * levels) / levels).astype(np.float32)
 
 
-def mech(pcm, sample_rate, level=MECH_LEVEL):
-    """Bake the synthetic-terminal timbre in. level 0 leaves the voice alone."""
+def mech(pcm, sample_rate, level=MECH_LEVEL, top=None):
+    """Bake the synthetic-terminal timbre in. level 0 leaves the voice alone.
+
+    `top` is the ceiling of the passband; Chinese needs a lower one because the
+    Kokoro zh voice carries more energy in the 3-5 kHz region that reads as a
+    hiss at speaking volume.
+
+    The grit is deliberately mild: a shallow ring modulation, no sample-rate
+    decimation below 0.75 (decimation aliases and aliasing is exactly what makes
+    a synthetic voice sound harsh), and only a 14-bit requantisation.
+    """
     import numpy as np
 
     data = trim(pcm, sample_rate)
     if level <= 0 or data.size == 0:
         return data
     strength = float(max(0.0, min(1.0, level)))
+    ceiling = float(top if top is not None else 3800.0)
 
-    out = band_limit(data, sample_rate)
+    out = band_limit(data, sample_rate, 145.0, ceiling)
     time = np.arange(out.size, dtype=np.float32) / float(sample_rate)
-    depth = 0.30 * strength
-    out = out * (1.0 - depth + depth * np.cos(2.0 * np.pi * 97.0 * time))
-    out = sample_hold(out, int(round(1.0 + 2.0 * strength)))
-    out = quantize(out, int(round(16.0 - 6.0 * strength)))
+    depth = 0.10 * strength
+    out = out * (1.0 - depth + depth * np.cos(2.0 * np.pi * 61.0 * time))
+    out = sample_hold(out, 2 if strength > 0.75 else 1)
+    out = quantize(out, int(round(16.0 - 4.0 * strength)))
+    out = band_limit(out, sample_rate, 120.0, ceiling * 1.06)
 
     edge = min(out.size, int(round(0.006 * sample_rate)))
     if edge > 1:
@@ -222,7 +233,7 @@ def mech(pcm, sample_rate, level=MECH_LEVEL):
         out[-edge:] *= ramp[::-1]
     peak = float(np.max(np.abs(out))) if out.size else 0.0
     if peak > 0:
-        out = out / peak * 0.89
+        out = out / peak * 0.86
     return out.astype(np.float32)
 
 

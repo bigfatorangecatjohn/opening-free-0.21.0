@@ -320,8 +320,8 @@ window.__ModuleLoader__.load({
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(76vmin, 720px);
-  height: min(76vmin, 720px);
+  width: min(93vmin, 900px);
+  height: min(93vmin, 900px);
   transform: translate(-50%, -50%);
   overflow: visible;
 }
@@ -404,6 +404,7 @@ window.__ModuleLoader__.load({
 .dshop-root.is-ru .dshop-zh { font-size: clamp(19px, 2.5vw, 33px); letter-spacing: 0.1em; }
 
 .dshop-zh {
+  max-width: 62vmin;
   font-size: clamp(22px, 3.1vw, 40px);
   font-weight: 500;
   letter-spacing: 0.16em;
@@ -433,16 +434,29 @@ window.__ModuleLoader__.load({
 
 .dshop-salute {
   animation: dshop-rise 0.66s cubic-bezier(0.2, 0.72, 0.2, 1) both;
-  letter-spacing: 0.18em;
+  text-align: center;
+}
+.dshop-salute-lead {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: clamp(12px, 1.35vw, 16px);
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--dshop-dim);
+  animation: dshop-rise 0.6s cubic-bezier(0.2, 0.72, 0.2, 1) both;
+}
+.dshop-salute-name {
+  margin-top: 12px;
+  font-size: clamp(28px, 4.2vw, 54px);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  animation: dshop-rise 0.7s cubic-bezier(0.2, 0.72, 0.2, 1) 0.12s both;
+}
+.dshop-salute.ru .dshop-salute-name,
+.dshop-salute.en .dshop-salute-name {
+  font-size: clamp(24px, 3.4vw, 42px);
+  letter-spacing: 0.12em;
 }
 .dshop-salute.zh { font-size: clamp(26px, 3.6vw, 46px); font-weight: 500; }
-.dshop-salute.en,
-.dshop-salute.ru {
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: clamp(13px, 1.5vw, 18px);
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-}
 
 .dshop-log {
   position: absolute;
@@ -524,9 +538,9 @@ window.__ModuleLoader__.load({
       return h(
         'svg',
         { className: 'dshop-rings', viewBox: '0 0 200 200', 'aria-hidden': 'true' },
-        h('g', { className: 'dshop-ring c' }, h('circle', { cx: 100, cy: 100, r: 92 })),
-        h('g', { className: 'dshop-ring a' }, h('circle', { cx: 100, cy: 100, r: 78 })),
-        h('g', { className: 'dshop-ring b' }, h('circle', { cx: 100, cy: 100, r: 61 })),
+        h('g', { className: 'dshop-ring c' }, h('circle', { cx: 100, cy: 100, r: 95 })),
+        h('g', { className: 'dshop-ring a' }, h('circle', { cx: 100, cy: 100, r: 83 })),
+        h('g', { className: 'dshop-ring b' }, h('circle', { cx: 100, cy: 100, r: 71 })),
       );
     }
 
@@ -711,7 +725,12 @@ window.__ModuleLoader__.load({
             ? h(
                 'div',
                 { className: 'dshop-salute ' + (SALUTE.lang || 'zh'), key: 'salute' },
-                SALUTE.text,
+                Array.isArray(SALUTE.lines) && SALUTE.lines.length === 2
+                  ? [
+                      h('div', { key: 'lead', className: 'dshop-salute-lead' }, SALUTE.lines[0]),
+                      h('div', { key: 'name', className: 'dshop-salute-name' }, SALUTE.lines[1]),
+                    ]
+                  : SALUTE.text,
               )
             : step
               ? h(
