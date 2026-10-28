@@ -7,7 +7,7 @@
 1. **先读 `README.md` 和 `docs/10-environment.md`**，再动手。环境事实以那两份为准，不要重新勘察一遍。
 2. 皮肤/动画只改 `plugin/dsh-opening/client.js`；manifest、patch、locale、icon 除非确实要改，否则别碰。
 3. 不新增第三方运行时依赖。React 从宿主的模块表拿（`require('react')`），不需要装、不需要打包、不需要 CDN。
-4. 不动 profile（`C:\Users\<你>\.dsh\profiles\desktop`）里的任何文件，不在那里跑 pnpm。安装只走 `plugin_manager`。
+4. 不动 profile（`C:\Users\<你>\.dsh\profiles\desktop`）里的业务文件，不在那里跑 pnpm。安装只走 `plugin_manager`。**例外**只有安装通道本身故障（见 `docs/10-environment.md` §安装通道修复）：改 `node_modules\.modules.yaml` 或 `pnpm-workspace.yaml` 必须先备份到 `.env-backup\<日期>\`，且永远不碰 `.npmrc`（cc-safety-net 规则 `secret.basename.npmrc` 会拦，别绕）。
 5. 不改工作区之外的任何东西；需要写工作区外时先说明理由并取得同意。
 
 ## 装前门禁

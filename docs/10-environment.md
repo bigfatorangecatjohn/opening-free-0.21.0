@@ -49,3 +49,30 @@
 - `node_modules\@linxin666\dsh-pet` — 体量适中的客户端插件。
 
 两者的 `locale/*.json` 格式：`{"meta":{"title":"…","description":"…"}}`。
+
+## 安装通道修复（2026-10-29，已打通）
+
+装一次本地 bundle 连撞两道 profile 级闸门，都不是我们的包的问题。
+
+**闸门一：`ERR_PNPM_UNEXPECTED_VIRTUAL_STORE`。** `profile\node_modules\.modules.yaml` 里 `virtualStoreDir` 还指着已经删掉的 `profiles\_stage\node_modules\.pnpm`，而 pnpm 现在要往 `profiles\desktop\node_modules\.pnpm` 里链，两边对不上就整条 install 拒绝。修法：把该字段改成 `C:\\Users\\<你>\\.dsh\\profiles\\desktop\\node_modules\\.pnpm`（单点字符串替换，改完 `_stage` 出现次数应为 0）。
+
+改之前必须先排掉一个真实风险：`dsh-infinite-gen-5` 是 `file:../../plugins/dsh-infinite-gen-5` 依赖，但那个源目录是**空的**，实体只在 `node_modules\dsh-infinite-gen-5`（52,698 文件 / 2,089.2 MB，唯一副本）。先 `robocopy /E /MT:16` 复制回源目录，核对文件数一致（52,698）再动 pnpm。
+
+**闸门二：`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`。** lockfile 里三个条目还在 24 小时冷静期内，pnpm 拒绝整份 lockfile：
+
+- `@lemoncat7/dsh-knowledge@2.16.0`
+- `@xmanrui/dsh-im@5.7.0`
+- `dshmarket@1.73.1`
+
+修法：在 `profile\pnpm-workspace.yaml` 的 `minimumReleaseAgeExclude` 末尾按既有格式追加这三行——**注意两空格缩进**（我第一次写成顶格，pnpm 直接报 YAML `document separator is expected`）。这是该文件本来就有的先例机制，不是新发明。
+
+**装通的判据：**
+
+- 返回 `"application": "applied"`，输出里有 `+ @local/dsh-opening 0.1.0 <- D:\DSH\Opening Design\plugin\dsh-opening`；
+- `profile\package.json` 的 dependencies 多出 `"@local/dsh-opening": "link:D:/DSH/Opening Design/plugin/dsh-opening"`，`dsh.profile.bundles` 数组末尾多出 `"@local/dsh-opening"`；
+- `node_modules\@local\dsh-opening` 是指向工作区的符号链接；
+- 客户端 `shell.overlay` 的 occupants 里出现 `id: dsh-opening, order: -1000, active: true`（HMR 直接生效，不用重启）。
+
+**备份**（改 profile 前做的，回滚用）：`D:\DSH\Opening Design\.env-backup\2026-10-28\` 里有 `package.json`、`cordis.patch.yml`、`modules.yaml`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`。
+
+**一个读数不要被吓到**：install 成功那次 pnpm 会打印 `Packages: -48`，那是清理陈旧条目。装完复核：`node_modules` 顶层仍是 244 项，`dsh-infinite-gen-5` 仍是 52,698 文件。

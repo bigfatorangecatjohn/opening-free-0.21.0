@@ -12,6 +12,7 @@
 | 工作区 ACL 故障 | 已修复并复核（沙箱可写） |
 | 挂载位 | 已定为 `shell.overlay`（整帧、click-through、additive seat） |
 | 插件骨架 | 已就位，通过装前门禁 |
+| 安装 | **已装进 desktop profile**（`@local/dsh-opening` 0.1.0，宿主行 `application: applied`，`shell.overlay` 里已挂载） |
 | 开机序列本体 | **占位版**（一缕发丝线 + 一个词 + 1.8 秒），等美术方向 |
 
 ## 目录
@@ -59,5 +60,6 @@ plugin_manager  action=set_plugin   target=@local/dsh-opening   enabled=false
 ## 已知坑
 
 - 这个工作区的 ACL 曾经缺 `WRITE_OWNER`，沙箱连目录都建不了；修复记录与回滚脚本在 `D:\DSH\_acl\`。
-- profile 的 pnpm install 历史上被一个 GitHub tarball 依赖卡死过（HEAD 超时无限重试）；该依赖已改成 `file:` 本地实体，装包前仍值得先盯一眼耗时。
+- profile 的 pnpm install 历史上被一个 GitHub tarball 依赖卡死过（HEAD 超时无限重试）；该依赖已改成 `file:` 本地实体。
+- 装包还要过两道 profile 级闸门，见 [`docs/10-environment.md`](docs/10-environment.md) §安装通道修复：`.modules.yaml` 里陈旧的 `virtualStoreDir`（`ERR_PNPM_UNEXPECTED_VIRTUAL_STORE`），以及 24 小时冷静期（`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`）。
 - `D:\Program Files\DeepSeek Harness\resources\app.asar` 里的文件，`glob`/`rg`/`pwsh` 都读不到，只有 `read` 工具能读。
