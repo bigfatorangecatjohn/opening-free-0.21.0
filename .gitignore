@@ -15,3 +15,8 @@ samples/
 
 # TTS 权重（可重下，单个 300 MB+，绝不入库）
 .models/
+
+# 工具脚本的一次性输出
+logs/*.out
+logs/*.err
+tmp*/
