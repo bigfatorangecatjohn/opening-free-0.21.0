@@ -56,7 +56,7 @@ window.__ModuleLoader__.load({
     const LANG_KEY = 'dsh-opening:lang';
     // A demo build pins one language; normal builds leave the operator's pick alone.
     const FORCED = String(window.__DSH_OPENING_FORCE_LANG__ || '');
-    const LANGS = ['zh', 'en', 'ru', 'ja'];
+    const LANGS = ['zh', 'en', 'ru', 'ja', 'zh-short', 'en-short', 'ru-short', 'ja-short'];
 
     /** The language picked in Settings, or Chinese when nothing is stored. */
     function readLang() {
@@ -77,9 +77,12 @@ window.__ModuleLoader__.load({
       }
     }
 
-    /** The track that matches the chosen language, falling back to Chinese. */
+    /** The track that matches the chosen mode, falling back to Chinese. */
     function pickSet() {
       const wanted = readLang();
+      for (let i = 0; i < SET.length; i++) {
+        if (SET[i].key === wanted) return SET[i];
+      }
       for (let i = 0; i < SET.length; i++) {
         if (SET[i].cue && SET[i].cue.lang === wanted) return SET[i];
       }
@@ -90,11 +93,14 @@ window.__ModuleLoader__.load({
     const CUE = ACTIVE.cue || FALLBACK_CUE;
     const TRACK = ACTIVE.track || '';
     const LANG = CUE.lang || ACTIVE.lang || 'zh';
+    const SHORT = CUE.short === true;
+    const STEPS = Array.isArray(CUE.steps) ? CUE.steps : [];
     const SUBTITLE = LANG === 'zh' ? 'en' : LANG === 'en' ? 'zh' : 'en';
     const SALUTE = Array.isArray(CUE.salute) ? CUE.salute[0] : CUE.salute;
-    const LEAD_IN = CUE.leadIn || CUE.steps[0].at;
-    const LAST_STEP = CUE.steps.length - 1;
-    const BADGE = { zh: '中文', en: 'EN', ru: 'RU', ja: '日本語' }[LANG] || 'EN';
+    const LEAD_IN = CUE.leadIn || (STEPS[0] ? STEPS[0].at : 1.45);
+    const LAST_STEP = STEPS.length - 1;
+    const BADGE_BASE = { zh: '中文', en: 'EN', ru: 'RU', ja: '日本語' }[LANG] || 'EN';
+    const BADGE = SHORT ? BADGE_BASE + ' · 简' : BADGE_BASE;
 
     /** Terminal furniture, one string per track language. */
     const PROTOCOL = {
@@ -146,15 +152,16 @@ window.__ModuleLoader__.load({
 
     /** Where the sequence stands at `t` seconds into the track. */
     function stageAt(t) {
-      if (t < CUE.steps[0].at) return { phase: -1, salute: false };
       if (t < SALUTE.at) {
+        if (!STEPS.length) return { phase: -1, salute: false };
+        if (t < STEPS[0].at) return { phase: -1, salute: false };
         let phase = 0;
-        for (let i = 0; i < CUE.steps.length; i++) {
-          if (t >= CUE.steps[i].at) phase = i;
+        for (let i = 0; i < STEPS.length; i++) {
+          if (t >= STEPS[i].at) phase = i;
         }
         return { phase, salute: false };
       }
-      return { phase: CUE.steps.length, salute: true };
+      return { phase: STEPS.length, salute: true };
     }
 
     function envelope(life) {
@@ -947,8 +954,8 @@ window.__ModuleLoader__.load({
 
       if (gone) return null;
 
-      const step = phase >= 0 && phase <= LAST_STEP ? CUE.steps[phase] : null;
-      const seen = CUE.steps.slice(0, Math.max(0, Math.min(phase + 1, CUE.steps.length)));
+      const step = phase >= 0 && phase <= LAST_STEP ? STEPS[phase] : null;
+      const seen = STEPS.slice(0, Math.max(0, Math.min(phase + 1, STEPS.length)));
       const leadIn = phase === -1;
 
       return h(
@@ -1052,12 +1059,16 @@ window.__ModuleLoader__.load({
       );
     }
 
-    /** The three tracks, in the order the page shows them. */
+    /** The eight modes, grouped: full sequence first, short cut second. */
     const CHOICES = [
-      { key: 'zh', name: '中文', line: '欢迎回来，指挥员' },
-      { key: 'en', name: 'English', line: 'Welcome back, commander.' },
-      { key: 'ru', name: 'Русский', line: 'Добро пожаловать, товарищ.' },
-      { key: 'ja', name: '日本語', line: 'おかえりなさいませ、ご主人様' },
+      { key: 'zh', group: 'full', name: '中文', line: '欢迎回来，指挥员' },
+      { key: 'en', group: 'full', name: 'English', line: 'Welcome back, commander.' },
+      { key: 'ru', group: 'full', name: 'Русский', line: 'Добро пожаловать, товарищ.' },
+      { key: 'ja', group: 'full', name: '日本語', line: 'おかえりなさいませ、ご主人様' },
+      { key: 'zh-short', group: 'short', name: '中文（简）', line: '欢迎回来，指挥员' },
+      { key: 'en-short', group: 'short', name: 'English (Short)', line: 'Welcome back, commander.' },
+      { key: 'ru-short', group: 'short', name: 'Русский (Кратко)', line: 'Добро пожаловать, товарищ.' },
+      { key: 'ja-short', group: 'short', name: '日本語（簡）', line: 'おかえりなさいませ、ご主人様' },
     ];
 
     /**
@@ -1090,13 +1101,32 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { style: { fontSize: '12.5px', lineHeight: 1.65, opacity: 0.62 } },
-            'Which language the power-on sequence speaks. The steps and the closing salute follow it; the change lands on the next page load.',
+            'Which power-on sequence plays. The full cut runs the five access steps (~18s); the short cut keeps the chimes and the closing salute only (~3s). The change lands on the next page load.',
           ),
         ),
-        h(
+        ['full', 'short'].map((group) =>
+          h(
+            'div',
+            {
+              key: 'group-' + group,
+              style: { display: 'flex', flexDirection: 'column', gap: '10px' },
+            },
+            h(
+              'div',
+              {
+                style: {
+                  fontSize: '11px',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  opacity: 0.5,
+                },
+              },
+              group === 'full' ? 'Full sequence · 18s' : 'Short cut · 3s',
+            ),
+            h(
           'div',
           { style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } },
-          CHOICES.map((choice) => {
+          CHOICES.filter((choice) => choice.group === group).map((choice) => {
             const active = choice.key === lang;
             return h(
               'button',
@@ -1148,6 +1178,8 @@ window.__ModuleLoader__.load({
               ),
             );
           }),
+            ),
+          ),
         ),
       );
     }

@@ -10,11 +10,12 @@ import soundfile as sf
 
 ASSETS = os.path.join('plugin', 'dsh-opening', 'assets')
 LANGS = ('zh', 'en', 'ru', 'ja')
+SHORT = tuple(lang + '-short' for lang in LANGS)
 QUALITY = 0.5
 
 
 def main():
-    for lang in LANGS:
+    for lang in LANGS + SHORT:
         wav = os.path.join(ASSETS, 'boot-%s.wav' % lang)
         ogg = os.path.join(ASSETS, 'boot-%s.ogg' % lang)
         if not os.path.isfile(wav):
@@ -24,7 +25,7 @@ def main():
         sf.write(ogg, samples, rate, format='OGG', subtype='VORBIS', compression_level=QUALITY)
         back, back_rate = sf.read(ogg, dtype='float32')
         print(
-            '%-3s %6.1f KiB -> %6.1f KiB  %.2fs @ %d Hz (round-trip %.2fs)'
+            '%-10s %6.1f KiB -> %6.1f KiB  %.2fs @ %d Hz (round-trip %.2fs)'
             % (
                 lang,
                 os.path.getsize(wav) / 1024.0,

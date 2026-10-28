@@ -42,6 +42,12 @@ TARGET_RATE = 24000
 LEAD_IN = 2.60
 TAIL = 1.30
 
+# The short cut keeps the same opening chimes and the same whale, drops the
+# five access steps, and lets the closing welcome speak straight after the ring.
+SHORT_LEAD = 2.20
+SHORT_TAIL = 0.28
+SHORT_MARK_DUR = 1.14
+
 # Relative widths of the gaps that eat whatever time the speech left over:
 # four gaps between the steps, then one longer breath before the salute.
 GAP_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.45]
@@ -284,6 +290,65 @@ class Voice:
         return self.kokoro(lang, text, speed)
 
 
+def build_short(args, salute):
+    """Chimes + closing welcome only. Same opening audio, same mark timing."""
+    # Slice the full lead-in so the chimes are sample-identical to the long cut.
+    lead = chimes(TARGET_RATE, LEAD_IN)[: int(round(TARGET_RATE * SHORT_LEAD))]
+    mark_at = MARK_AT
+    pieces = [lead, salute, silence(SHORT_TAIL)]
+    track = np.concatenate(pieces).astype(np.float32)
+    total = seconds(track)
+
+    bed = music_bed(TARGET_RATE, total)
+    track = track + 0.10 * duck_bed(track, bed, TARGET_RATE)
+
+    salute_at = round(seconds(lead), 3)
+    shown = DISPLAY_SALUTE[args.lang]
+    cue = {
+        "name": "salute",
+        "at": salute_at,
+        "dur": round(seconds(salute), 3),
+        "end": round(salute_at + seconds(salute), 3),
+        "lang": args.lang,
+        "text": shown,
+        "lines": split_salute(shown, args.lang),
+    }
+
+    timeline = {
+        "lang": args.lang,
+        "short": True,
+        "sampleRate": TARGET_RATE,
+        "total": round(total, 3),
+        "mech": args.mech,
+        "speeds": {"zh": args.speed_zh, "en": args.speed_en, "ru": args.speed_ru},
+        "leadIn": SHORT_LEAD,
+        "tail": SHORT_TAIL,
+        "gaps": [],
+        "mark": {"at": mark_at, "dur": SHORT_MARK_DUR},
+        "chimes": {
+            "notes": list(NOTE_HZ),
+            "at": list(NOTE_AT),
+            "markAt": MARK_AT,
+            "kind": "water-drop",
+        },
+        "cues": [cue],
+    }
+
+    make_samples.write_wav(args.out, track, TARGET_RATE)
+    manifest = os.path.splitext(args.out)[0] + ".sequence.json"
+    with open(manifest, "w", encoding="utf-8") as handle:
+        json.dump(timeline, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+
+    print("track   : %s" % args.out)
+    print("size    : %.1f KiB" % (os.path.getsize(args.out) / 1024.0))
+    print("manifest: %s" % manifest)
+    print("speech  : %.2f s" % seconds(salute))
+    print("total   : %.2f s (short)" % total)
+    print("  salute %.2fs -> %.2fs" % (salute_at, salute_at + seconds(salute)))
+    return 0
+
+
 def main(argv):
     parser = argparse.ArgumentParser(description="Build one boot-sequence audio track.")
     parser.add_argument("--lang", default="zh", choices=["zh", "en", "ru", "ja"])
@@ -295,6 +360,11 @@ def main(argv):
     parser.add_argument("--ru-voice", default="baya")
     parser.add_argument("--target", type=float, default=18.0)
     parser.add_argument("--out", default=None)
+    parser.add_argument(
+        "--short",
+        action="store_true",
+        help="closing welcome only, ~3 s, same chimes and same mark",
+    )
     args = parser.parse_args(argv)
 
     speed = {
@@ -316,6 +386,9 @@ def main(argv):
     steps = [voice.line(args.lang, text, speed) for text in texts[:5]]
     print("salute ...", flush=True)
     salute = voice.line(args.lang, texts[5], speed)
+
+    if args.short:
+        return build_short(args, salute)
 
     speech = sum(seconds(block) for block in steps) + seconds(salute)
     spare = args.target - LEAD_IN - TAIL - speech

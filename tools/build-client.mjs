@@ -26,7 +26,9 @@ const outputFile = join(packageDir, 'client.js');
 
 const argv = process.argv.slice(2);
 const langFlag = argv.indexOf('--langs');
-const langs = (langFlag >= 0 ? argv[langFlag + 1] : 'zh,en,ru,ja')
+const BASE_LANGS = ['zh', 'en', 'ru', 'ja'];
+const ALL_KEYS = BASE_LANGS.concat(BASE_LANGS.map((lang) => lang + '-short'));
+const langs = (langFlag >= 0 ? argv[langFlag + 1] : ALL_KEYS.join(','))
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean);
@@ -40,8 +42,8 @@ if (forced && !['zh', 'en', 'ru', 'ja'].includes(forced)) {
 }
 
 for (const lang of langs) {
-  if (!['zh', 'en', 'ru', 'ja'].includes(lang)) {
-    console.error('unknown language ' + lang + ' (expected zh, en, ru or ja)');
+  if (!ALL_KEYS.includes(lang)) {
+    console.error('unknown key ' + lang + ' (expected one of ' + ALL_KEYS.join(', ') + ')');
     process.exit(1);
   }
 }
@@ -54,14 +56,17 @@ if (!existsSync(markFile)) {
 }
 
 /** One {lang, track, cue} entry per requested language. */
-function buildEntry(lang) {
+function buildEntry(key) {
+  const short = key.endsWith('-short');
+  const lang = short ? key.slice(0, -6) : key;
+  const suffix = short ? '-short' : '';
   // Prefer the compressed master: the same 18 s track is ~85 KB as Vorbis
   // against ~844 KB as WAV, and this audio is inlined into the client.
   const candidates = [
-    { file: join(assetsDir, 'boot-' + lang + '.ogg'), mime: 'audio/ogg' },
-    { file: join(assetsDir, 'boot-' + lang + '.wav'), mime: 'audio/wav' },
+    { file: join(assetsDir, 'boot-' + lang + suffix + '.ogg'), mime: 'audio/ogg' },
+    { file: join(assetsDir, 'boot-' + lang + suffix + '.wav'), mime: 'audio/wav' },
   ];
-  const cueFile = join(assetsDir, 'boot-' + lang + '.sequence.json');
+  const cueFile = join(assetsDir, 'boot-' + lang + suffix + '.sequence.json');
   const picked = candidates.find((candidate) => existsSync(candidate.file));
   if (!picked) {
     console.error('missing input: ' + candidates.map((candidate) => candidate.file).join(' or '));
@@ -77,8 +82,8 @@ function buildEntry(lang) {
     .filter((cue) => cue.name.startsWith('step'))
     .map((cue) => ({ at: cue.at, end: cue.end, text: cue.text }));
   const salute = manifest.cues.find((cue) => cue.name === 'salute');
-  if (steps.length !== 5 || !salute) {
-    console.error(lang + ': manifest needs five step cues and one salute cue');
+  if (steps.length !== (short ? 0 : 5) || !salute) {
+    console.error(key + ': manifest needs ' + (short ? 'no step cues' : 'five step cues') + ' and one salute cue');
     process.exit(1);
   }
   if (steps.some((step) => !step.text || !step.text.zh)) {
@@ -86,13 +91,15 @@ function buildEntry(lang) {
     process.exit(1);
   }
   return {
-    lang,
+    key,
     audio,
     entry: {
+      key,
       lang,
       track: 'data:' + picked.mime + ';base64,' + audio.toString('base64'),
       cue: {
         lang: manifest.lang,
+        short,
         total: manifest.total,
         leadIn: manifest.leadIn,
         fadeOut: 0.52,
@@ -129,9 +136,9 @@ writeFileSync(outputFile, banner + source, 'utf8');
 
 const kib = (value) => (value / 1024).toFixed(1) + ' KiB';
 const totalBytes = Buffer.byteLength(banner + source, 'utf8');
-console.log('langs   ' + built.map((item) => item.lang).join(', ') + (forced ? '  (forced ' + forced + ')' : ''));
+console.log('modes   ' + built.map((item) => item.key).join(', ') + (forced ? '  (forced ' + forced + ')' : ''));
 for (const item of built) {
-  console.log('track   ' + item.lang + '  ' + kib(item.audio.length) + ' -> inlined');
+  console.log('track   ' + item.key.padEnd(10) + '  ' + kib(item.audio.length) + ' -> inlined');
 }
 console.log('mark    ' + kib(mark.length) + ' -> inlined');
 console.log('client  ' + kib(totalBytes) + ' (source ' + kib(Buffer.byteLength(source, 'utf8')) + ')');

@@ -10,10 +10,11 @@
 |---|---|
 | `package.json` | 包身份。`dsh.bundle.patch` 指 patch，`dsh.client` 指浏览器半入口，`files` 是运行时文件白名单 |
 | `cordis.patch.yml` | 一行 `insert`，`id: dsh-opening-free`、`name: 'dsh-opening-free'`（**引号是硬要求**，见 §4） |
-| `index.js` | 宿主半。注册一条 `/dsh-opening/asset/boot.wav` 路由，实测 404，**运行时并不依赖它**；没有 webServer 时只 warn 不抛 |
-| `client.js` | **生成物**。头部三行 data URI：四条音轨 + 鲸鱼 PNG；正文是 `window.__ModuleLoader__.load(...)`。不要手改 |
-| `client.src.js` | 客户端源码（37.4 KiB）。音轨/鲸鱼通过 `window.__DSH_OPENING_SET__` / `__DSH_OPENING_MARK__` 注入 |
-| `assets/boot-{zh,en,ru,ja}.ogg` | 分发用的压缩音轨（各约 85 KiB），构建时被内联 |
+| `index.js` | 宿主半。**故意为空**：只导出 `name` 与空的 `apply()`。音频内联在 `client.js` 里，不再注册任何路由，也就不欠任何服务契约 |
+| `client.js` | **生成物**。头部三行 data URI：八条音轨（4 语言 × 完整/简短）+ 鲸鱼 PNG；正文是 `window.__ModuleLoader__.load(...)`。不要手改 |
+| `client.src.js` | 客户端源码（约 39 KiB）。音轨/鲸鱼通过 `window.__DSH_OPENING_SET__` / `__DSH_OPENING_MARK__` 注入 |
+| `assets/boot-{zh,en,ru,ja}.ogg` | 完整版音轨（各约 83–95 KiB），构建时内联 |
+| `assets/boot-{lang}-short.ogg` | 简短版音轨（各约 21–25 KiB），同样内联 |
 | `assets/boot-*.wav` + `.sequence.json` | 未压缩母版与时间轴清单；`.sequence.json` 是 cue 的唯一来源 |
 | `locale/{zh,en}.json` | 设置页标题与描述（`meta.title` / `meta.description`） |
 | `icon.svg` | 插件市场图标（695 B） |
@@ -55,7 +56,7 @@
 2. `tools\build-boot-track.py` 的 `TOP_HZ`、`DISPLAY_STEPS`、`DISPLAY_SALUTE`、`choices`、`speed` 字典
 3. `plugin\dsh-opening\client.src.js` 的 `LANGS`、`BADGE`、`PROTOCOL`、`CAPTION`、`CHOICES`
 4. `tools\build-client.mjs` 的 langs 默认值与白名单
-   - 完成判据：门禁 PASS 且 `build-client.mjs` 打印出四种语言各自 `-> inlined`。
+   - 完成判据：门禁 PASS 且 `build-client.mjs` 打印出八个模式（`zh, en, ru, ja, zh-short, en-short, ru-short, ja-short`）各自 `-> inlined`。
 
 ## 4. 坑（都是真踩过的）
 
