@@ -26,8 +26,8 @@ window.__ModuleLoader__.load({
 
     /** Text projected where the slot owner draws a label. */
     const DICT = {
-      zh: { word: '开机序列' },
-      en: { word: 'BOOT SEQUENCE' },
+      zh: { word: '开机序列', title: '开机动画' },
+      en: { word: 'BOOT SEQUENCE', title: 'Opening Sequence' },
     };
 
     /**
@@ -902,18 +902,20 @@ window.__ModuleLoader__.load({
       );
     }
 
+    /** The three tracks, in the order the page shows them. */
+    const CHOICES = [
+      { key: 'zh', name: '中文', line: '欢迎回来，指挥员' },
+      { key: 'en', name: 'English', line: 'Welcome back, commander.' },
+      { key: 'ru', name: 'Русский', line: 'Добро пожаловать, товарищ.' },
+    ];
+
     /**
-     * Settings → General row. Renders with inline styles on purpose: the stage
-     * CSS is confined to the overlay, while this row lives inside the host's
-     * settings page and has to inherit the host's theme and font.
+     * This plugin's own Settings page. Inline styles on purpose: the stage CSS
+     * is confined to the overlay, while this page lives inside the host's
+     * settings panel and should inherit its theme, font and colour.
      */
-    function LanguageRow() {
+    function SettingsPage() {
       const [lang, setLang] = useState(readLang);
-      const options = [
-        { key: 'zh', label: '中文' },
-        { key: 'en', label: 'English' },
-        { key: 'ru', label: 'Русский' },
-      ];
       const choose = (next) => {
         writeLang(next);
         setLang(next);
@@ -923,52 +925,78 @@ window.__ModuleLoader__.load({
         {
           style: {
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '16px',
-            padding: '10px 0',
+            flexDirection: 'column',
+            gap: '18px',
+            maxWidth: '640px',
             font: 'inherit',
             color: 'inherit',
           },
         },
         h(
           'div',
-          { style: { display: 'flex', flexDirection: 'column', gap: '3px' } },
-          h('div', { style: { fontSize: '13px', fontWeight: 500 } }, 'Boot language'),
+          { style: { display: 'flex', flexDirection: 'column', gap: '6px' } },
+          h('div', { style: { fontSize: '15px', fontWeight: 600 } }, 'Boot language'),
           h(
             'div',
-            { style: { fontSize: '12px', opacity: 0.6 } },
-            'Which language the boot sequence speaks.',
+            { style: { fontSize: '12.5px', lineHeight: 1.65, opacity: 0.62 } },
+            'Which language the power-on sequence speaks. The steps and the closing salute follow it; the change lands on the next page load.',
           ),
         ),
         h(
           'div',
-          { style: { display: 'flex', gap: '6px' } },
-          options.map((option) =>
-            h(
+          { style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } },
+          CHOICES.map((choice) => {
+            const active = choice.key === lang;
+            return h(
               'button',
               {
-                key: option.key,
+                key: choice.key,
                 type: 'button',
-                onClick: () => choose(option.key),
-                'aria-pressed': lang === option.key,
+                onClick: () => choose(choice.key),
+                'aria-pressed': active,
                 style: {
-                  padding: '5px 12px',
-                  borderRadius: '6px',
+                  flex: '1 1 170px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: '6px',
+                  padding: '12px 14px',
+                  borderRadius: '10px',
                   border:
                     '1px solid ' +
-                    (lang === option.key ? 'currentColor' : 'rgba(128, 128, 128, 0.34)'),
-                  background:
-                    lang === option.key ? 'rgba(128, 128, 128, 0.16)' : 'transparent',
+                    (active ? 'currentColor' : 'rgba(128, 128, 128, 0.3)'),
+                  background: active ? 'rgba(128, 128, 128, 0.14)' : 'transparent',
                   color: 'inherit',
                   font: 'inherit',
-                  fontSize: '12px',
+                  textAlign: 'left',
                   cursor: 'pointer',
+                  transition: 'background 120ms ease, border-color 120ms ease',
                 },
               },
-              option.label,
-            ),
-          ),
+              h(
+                'span',
+                {
+                  style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                  },
+                },
+                choice.name,
+                active
+                  ? h('span', { style: { fontSize: '11px', opacity: 0.65 } }, '✓')
+                  : null,
+              ),
+              h(
+                'span',
+                { style: { fontSize: '11.5px', opacity: 0.58 } },
+                choice.line,
+              ),
+            );
+          }),
         ),
       );
     }
@@ -979,15 +1007,15 @@ window.__ModuleLoader__.load({
         'dsh-opening: dictionaries',
       );
       const t = ctx.locale.bind(NS);
-      ctx.slots.inject('settings.general.item', () =>
+      ctx.slots.inject('settings.section', () =>
         ctx.slots.register(
           {
-            name: 'settings.general.item',
-            id: 'dsh-opening-free-language',
-            order: 60,
-            label: () => 'Boot sequence',
+            name: 'settings.section',
+            id: 'dsh-opening-free',
+            order: 45,
+            label: () => t('title'),
           },
-          () => h(LanguageRow, null),
+          () => h(SettingsPage, null),
         ),
       );
       ctx.slots.inject('shell.overlay', () =>
