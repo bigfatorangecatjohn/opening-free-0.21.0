@@ -29,6 +29,12 @@ demo/concat-short.txt
 Demo/seg-*-short.mp4
 demo/*.png
 
+# 发行物 / 大文件：走 GitHub Release，不进仓库
+# （wav 母版可由 tools/build-boot-track.py 重渲；完整版演示片挂 Release）
+dist/
+plugin/dsh-opening/assets/*.wav
+demo/dsh-opening-demo.mp4
+
 # 本机环境备份与第三方参考副本：只在本地留档，不随插件发布
 .env-backup/
 .ref/

@@ -8,6 +8,7 @@
 - 形态：DSH 客户端插件（bundle），挂在 `shell.overlay` 整帧浮层，click-through
 - 八种模式：四种语言 × 完整版 18 s / 简版 3.8–4.5 s
 - 全部资源（八条音轨 + 鲸鱼图 + 时间轴）内联在 `client.js`，运行时零请求
+- 下载：安装 zip 与四语完整版演示片在 [GitHub Releases](https://github.com/bigfatorangecatjohn/opening-free-0.21.0/releases/latest)
 
 ## 现在长什么样
 
@@ -45,7 +46,7 @@
 plugin/dsh-opening/     运行包（装进 profile 的就是它）
   client.src.js         唯一可编辑的客户端源码（约 102 KiB）
   client.js             生成物：八条音轨 + 鲸鱼 + 时间轴全部内联（约 900 KiB）
-  assets/               wav 母版 + ogg + *.sequence.json（时间轴真源）
+  assets/               ogg + *.sequence.json（时间轴真源）；wav 母版只在本地，不入库
   index.js              宿主半，故意为空
   locale/{zh,en}.json   插件列表里的标题/描述
   cordis.patch.yml      宿主行，id=dsh-opening-free
@@ -53,8 +54,8 @@ plugin/dsh-opening/     运行包（装进 profile 的就是它）
 tools/                  音频/客户端/检查/出包脚本
 docs/                   环境、语音、手册与 SOP
 samples/                TTS 样音与每轮母版
-demo/                   演示片：四语简版 15.0 s / 四语完整版 69.9 s（带原声，已入库）
-dist/                   分发包：文件夹 + 傻瓜 zip
+demo/                   演示片：四语简版 15.0 s（带原声，已入库）
+dist/                   分发包（本地生成、不入库；zip 与完整版演示片走 Release）
 ```
 
 ## 从源码到包
@@ -77,13 +78,13 @@ node tools\build-client.mjs
 # 5. 装前门禁
 node tools\check-bundle.mjs plugin\dsh-opening
 
-# 6. 出分发包（文件夹 + 安装.cmd + 安装说明.txt + zip）
+# 6. 出分发包（文件夹 + 安装.cmd + 安装说明.txt + zip；dist/ 不入库）
 node tools\make-dist.mjs
 ```
 
 数据流：`assets/boot-*.wav` + `*.sequence.json` → `build-client.mjs` 读 `ogg` 与 `sequence.json` → 生成 `client.js` 头部的 `__DSH_OPENING_SET__`（八条 cue）。**时间轴的真源是 `sequence.json`，不是手写常量**。
 
-演示片：`tools\capture-app.py` 逐语录屏（`CAPTURE_LEAD=2.8`，简版 12 s / 完整版 25 s；录前自动 `build-client.mjs --force <key>`，**录完必须重建默认**；窗口要先由用户点最大化——外部 `SetWindowPos`/`ShowWindow` 会被进程拦掉），再 `tools\cut-demo-reels.py both` 对齐、居中裁切、mux 原声，产出 `demo\dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB）与 `demo\dsh-opening-demo.mp4`（69.9 s；1880×1480 母版约 14.5 MiB，留在本机 `demo\master-dsh-opening-demo.mp4`，不进库；入库的是 1600×1260 / 8.1 MiB 的 web 转码）。对齐只认一个锚点：画面底部百分比（简版读 T=2.0 s、完整版读 T=8.0 s，再取整段；`start = 帧时间 − 百分比 × span`，残差约 ±20 ms）。
+演示片：`tools\capture-app.py` 逐语录屏（`CAPTURE_LEAD=2.8`，简版 12 s / 完整版 25 s；录前自动 `build-client.mjs --force <key>`，**录完必须重建默认**；窗口要先由用户点最大化——外部 `SetWindowPos`/`ShowWindow` 会被进程拦掉），再 `tools\cut-demo-reels.py both` 对齐、居中裁切、mux 原声，产出 `demo\dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB，入库）与完整版 69.9 s。完整版以 1880×1480 母版（约 14.5 MiB）随 Release 发；本机母版固定放 `demo\master-dsh-opening-demo.mp4`，由 `.gitignore` 排除，仓库里只留简版那一条。对齐只认一个锚点：画面底部百分比（简版读 T=2.0 s、完整版读 T=8.0 s，再取整段；`start = 帧时间 − 百分比 × span`，残差约 ±20 ms）。
 
 ## 验证
 
@@ -95,7 +96,7 @@ node tools\make-dist.mjs
 ## 装 / 卸
 
 - **本机开发**：profile 里是 Junction，直接 Ctrl+R。
-- **发给别人**：`dist\dsh-opening-free-0.21.0.zip`。解压后双击 `安装.cmd`（它把文件夹路径放进剪贴板），然后 设置 → 插件 → 安装本地插件（bundle）→ 选中 `dsh-opening-free-0.21.0` 文件夹 → 等 `applied` → Ctrl+R。细节见 `docs/42-install.md`。
+- **发给别人**：从 [Releases](https://github.com/bigfatorangecatjohn/opening-free-0.21.0/releases/latest) 下载 `dsh-opening-free-0.21.0.zip`（仓库里没有 zip，`dist/` 是本地生成物）。解压后双击 `安装.cmd`（它把文件夹路径放进剪贴板），然后 设置 → 插件 → 安装本地插件（bundle）→ 选中 `dsh-opening-free-0.21.0` 文件夹 → 等 `applied` → Ctrl+R。细节见 `docs/42-install.md`。
 - **卸载**：设置 → 插件 → `dsh-opening-free` → 卸载，刷新恢复原样。
 
 ## 已知限制

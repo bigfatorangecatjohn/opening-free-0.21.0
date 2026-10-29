@@ -126,7 +126,7 @@ node tools\check-bundle.mjs plugin\dsh-opening
 ### 5.2 分发给别人
 
 1. `node tools\make-dist.mjs`（§7）。
-2. 把 `dist\dsh-opening-free-0.21.0.zip` 给对方；对方解压、双击 `安装.cmd`、按 §5.3 操作。
+2. 把 zip 传到 GitHub Release（`gh release upload v<版本> dist\dsh-opening-free-0.21.0.zip`），把 Release 链接给对方——`dist/` 已被 `.gitignore` 排除，不要提交；对方解压、双击 `安装.cmd`、按 §5.3 操作。
 3. 不想用 `安装.cmd` 也可以直接读 `安装说明.txt`。
 
 ### 5.3 宿主侧安装（人操作）
@@ -169,6 +169,8 @@ dist/
   安装说明.txt                     同样的说明，纯文本
   dsh-opening-free-0.21.0.zip       上面三者打包，交给别人
 ```
+
+zip 走 GitHub Release，不进仓库（`dist/` 已 gitignore）。Release 同时挂四语完整版演示片（`demo\master-dsh-opening-demo.mp4`，1880×1480，约 14.5 MiB）。
 
 **判据**：
 

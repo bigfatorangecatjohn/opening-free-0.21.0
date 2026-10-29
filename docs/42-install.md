@@ -1,6 +1,6 @@
 # 安装 · 三步（+ 排错）
 
-这个包是 DSH **本地插件（bundle）**，安装只需要在 DSH 界面里选一次文件夹。
+这个包是 DSH **本地插件（bundle）**，安装只需要在 DSH 界面里选一次文件夹。zip 从 [GitHub Releases](https://github.com/bigfatorangecatjohn/opening-free-0.21.0/releases/latest) 下载——仓库里不放 zip（`dist/` 是本地生成物）。
 
 ## 三步
 

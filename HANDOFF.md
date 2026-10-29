@@ -24,6 +24,8 @@ dist/
 
 **18:40 追加**：中文/日文的「欢迎回来，/ xxx」两行已下移并收紧——`is-zh` 类（`client.src.js` 约 1009–1023 的 `.dshop-cyber-lead/rule/name` line-height 1.12 / margin-top 4px / name line-height 1.04）+ `place()` 里 `cjkSalute` 分支（`reserve=54`、`drop=min(unit*0.02,22)`，约 2348–2350 行；reserve 先写 48，怕顶到进度条改 54），en/ru 不动。门禁 PASS。**18:47 用户点最大化后已重录 8 条 take 并重剪两条片**（成片量得环底→lead 约 38 px、两行间隙约 30 px）。外部改窗口尺寸（`SetWindowPos` / `ShowWindow` / `SC_MAXIMIZE` / Win+Up / 拖边框）全被进程截获，只能请用户点最大化；`capture-app.py` 的 `CAPTURE_MAXIMIZE` 已证明无效，别再加。
 
+**20:10 追加（用户「彻底清，瘦身，重新出包」）**：仓库从 20.6 MB 瘦到 ~6 MB 的工作树——`plugin/dsh-opening/assets/*.wav`（8 个母版，4.03 MB）、`demo/dsh-opening-demo.mp4`（8.5 MB 完整版 web 转码）、`dist/`（1.54 MB）全部 `git rm --cached` 并写进 `.gitignore`，本地文件保留；完整版演示片与安装 zip 改走 GitHub Release。历史里的 `.env-backup/`（本机 profile 插件清单）、`.ref/`（第三方插件源码副本）、根目录参考 aac、wav 母版、完整版 mp4、dist 用 `git-filter-repo`（`.tmp/filter-repo/git-filter-repo.py`，沙箱里 sh 被拦、filter-branch 跑不了）重写后 force push，**所有 commit SHA 因此变化**。
+
 ---
 
 ## 1. 这一版到底改了什么（相对 HEAD c3e5693）
