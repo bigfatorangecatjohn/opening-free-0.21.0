@@ -211,7 +211,7 @@ zip 走 GitHub Release，不进仓库（`dist/` 已 gitignore）。Release 同�
 
 ## 10. 附：演示片（录屏 + 重剪）
 
-两条交付片：`demo/dsh-opening-demo-short.mp4`（四语简版连播，15.0 s / 4.7 MiB）与 `demo/dsh-opening-demo.mp4`（四语完整版连播，69.9 s / 14.5 MiB），均 1880×1480、AAC 192k、带原声。
+两条交付片：`demo/dsh-opening-demo-short.mp4`（四语简版连播，15.0 s / 4.7 MiB，入库）与四语完整版 69.9 s（1880×1480 母版约 14.5 MiB，随 Release 发、不入库），均 AAC 192k、带原声。
 
 1. **窗口**：先请用户把 DSH 点最大化。外部 `SetWindowPos` / `ShowWindow` / `WM_SYSCOMMAND SC_MAXIMIZE` / Win+Up / 拖边框全部被进程拦掉（`capture-app.py` 的 `CAPTURE_MAXIMIZE` 已证明无效，别重试）；目标 client ≈ 2560×1528。
 2. **录**：`$env:CAPTURE_LEAD='2.8'; $env:CAPTURE_SECONDS='12'; .venv-tts\Scripts\python.exe tools\capture-app.py zh-short en-short ru-short ja-short`；完整版把 `CAPTURE_SECONDS` 改 `25`、键换成 `zh en ru ja`。脚本会自动 `build-client --force <key>`，**录完必须 `node tools\build-client.mjs` 重建默认**。

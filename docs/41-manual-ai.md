@@ -102,5 +102,5 @@
 ## 7. 当前状态（0.21.0）
 
 - 八条音频、八条 cue、简版三拍视觉、完整版五步、四语连播预览、竖线呼吸进度条：全部已落盘并通过门禁。
-- 演示片：`tools/cut-demo-reels.py` 从八条原始录屏 concat 出 `demo/dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB）与 `demo/dsh-opening-demo.mp4`（69.9 s / 14.5 MiB），1880×1480 居中裁切、mux 原声；对齐只认进度条百分比（简版 T=2.0 s 读、完整版 T=8.0 s 读粗窗 + 1% 跳变格点拟合，残差约 ±20 ms），不认淡出/挂载帧差。
+- 演示片：`tools/cut-demo-reels.py` 从八条原始录屏 concat 出 `demo/dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB，入库）与完整版 69.9 s（1880×1480 母版约 14.5 MiB，随 Release 发、不入库），1880×1480 居中裁切、mux 原声；对齐只认进度条百分比（简版 T=2.0 s 读、完整版 T=8.0 s 读粗窗 + 1% 跳变格点拟合，残差约 ±20 ms），不认淡出/挂载帧差。
 - 未完成：`HANDOFF.md` 之外的提交整理、音色 `mech 0.6` 是否下调待用户拍板。
