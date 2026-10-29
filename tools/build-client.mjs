@@ -5,11 +5,11 @@
 // unreachable in this build, so the tracks, their timelines and the mark are
 // all inlined here — the same move the reference splash plugin made.
 //
-// All three language tracks ship together; the client plays one per page load,
-// cycling zh -> en -> ru, so every version can be seen without a rebuild.
+// All eight tracks (four languages, full + short) ship together; the client plays
+// the stored choice, one per page load, so every version can be seen without a rebuild.
 //
-//     node tools/build-client.mjs            # bundle zh, en and ru (default)
-//     node tools/build-client.mjs --langs zh # bundle one language only
+//     node tools/build-client.mjs                  # bundle all eight keys (default)
+//     node tools/build-client.mjs --langs zh,zh-short  # bundle one mode only
 //
 // Edit `client.src.js`; run this; commit both.
 
@@ -86,6 +86,10 @@ function buildEntry(key) {
     console.error(key + ': manifest needs ' + (short ? 'no step cues' : 'five step cues') + ' and one salute cue');
     process.exit(1);
   }
+  if (short && !manifest.phases) {
+    console.error(key + ': short masters must carry a `phases` map (see HANDOFF.md §2)');
+    process.exit(1);
+  }
   if (steps.some((step) => !step.text || !step.text.zh)) {
     console.error(lang + ': step cues need the multi-lingual `text` map');
     process.exit(1);
@@ -102,8 +106,11 @@ function buildEntry(key) {
         short,
         total: manifest.total,
         leadIn: manifest.leadIn,
-        fadeOut: 0.52,
+        // The short cut is over when its track is: the fade has to fit inside it.
+        fadeOut: short ? 0.28 : 0.52,
         mark: manifest.mark,
+        // sweep -> burst -> whale -> rings -> salute/name, straight from the master.
+        phases: manifest.phases || null,
         steps,
         salute: { lang: salute.lang, at: salute.at, end: salute.end, text: salute.text, lines: salute.lines || null },
       },

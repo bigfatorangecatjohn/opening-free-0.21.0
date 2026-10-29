@@ -23,7 +23,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FFMPEG = os.path.join(ROOT, '.tmp', 'ffmpeg', 'ffmpeg-9.0.2-essentials_build', 'bin', 'ffmpeg.exe')
 DEMO = os.path.join(ROOT, 'demo')
 LANGS = ['zh', 'en', 'ru', 'ja']
-LEAD = 1.4
+LEAD = float(os.environ.get('CAPTURE_LEAD', '1.4'))
 SECONDS = float(os.environ.get('CAPTURE_SECONDS', '24.0'))
 
 user32 = ctypes.windll.user32
@@ -116,6 +116,9 @@ def capture(force_lang):
         raise SystemExit('the DSH window is not reachable; restore it first')
     if not bring_to_front(hwnd):
         raise SystemExit('could not raise the DSH window to the foreground; bring it up and retry')
+    if os.environ.get('CAPTURE_MAXIMIZE') == '1':
+        user32.ShowWindow(hwnd, 3)  # SW_MAXIMIZE
+        time.sleep(0.7)
     print('  foreground ok', flush=True)
 
     screen_w = user32.GetSystemMetrics(0)

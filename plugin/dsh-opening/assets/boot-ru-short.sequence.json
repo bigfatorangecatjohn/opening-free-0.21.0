@@ -2,42 +2,45 @@
   "lang": "ru",
   "short": true,
   "sampleRate": 24000,
-  "total": 4.287,
+  "total": 3.936,
   "mech": 0.6,
   "speeds": {
     "zh": 1.15,
     "en": 1.0,
-    "ru": 1.0
+    "ru": 1.0,
+    "ja": 1.12
   },
-  "leadIn": 2.2,
-  "tail": 0.28,
+  "leadIn": 3.936,
+  "tail": 0.3,
   "gaps": [],
   "mark": {
-    "at": 1.06,
-    "dur": 1.14
+    "at": 0.0,
+    "dur": 0.0
   },
-  "chimes": {
-    "notes": [
-      1760.0,
-      1318.51,
-      1760.0,
-      1318.51
+  "phases": {
+    "sweep": [
+      0.0,
+      0.52
     ],
-    "at": [
-      0.08,
-      0.3,
-      0.52,
-      0.74
+    "burst": 0.52,
+    "whale": [
+      0.58,
+      2.03
     ],
-    "markAt": 1.06,
-    "kind": "water-drop"
+    "rings": 1.06,
+    "salute": 1.62,
+    "name": 2.98
+  },
+  "speech": {
+    "lead": 1.06,
+    "name": 0.656
   },
   "cues": [
     {
       "name": "salute",
-      "at": 2.2,
-      "dur": 1.808,
-      "end": 4.008,
+      "at": 1.62,
+      "dur": 2.016,
+      "end": 3.636,
       "lang": "ru",
       "text": "ДОБРО ПОЖАЛОВАТЬ, ТОВАРИЩ",
       "lines": [

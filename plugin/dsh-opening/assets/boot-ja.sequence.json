@@ -21,21 +21,25 @@
     "at": 1.06,
     "dur": 1.54
   },
-  "chimes": {
-    "notes": [
-      1760.0,
-      1318.51,
-      1760.0,
-      1318.51
+  "phases": {
+    "sweep": [
+      0.0,
+      0.78
     ],
-    "at": [
-      0.08,
-      0.3,
-      0.52,
-      0.74
+    "burst": 0.78,
+    "whale": [
+      0.8,
+      2.35
     ],
+    "rings": 1.95,
+    "burstPower": 0.35
+  },
+  "whale": {
+    "at": 0.74,
+    "length": 1.45,
     "markAt": 1.06,
-    "kind": "water-drop"
+    "kind": "recorded-call",
+    "src": "whale-call-src.wav"
   },
   "cues": [
     {

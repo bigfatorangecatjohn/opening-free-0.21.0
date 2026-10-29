@@ -21,21 +21,25 @@
     "at": 1.06,
     "dur": 1.54
   },
-  "chimes": {
-    "notes": [
-      1760.0,
-      1318.51,
-      1760.0,
-      1318.51
+  "phases": {
+    "sweep": [
+      0.0,
+      0.78
     ],
-    "at": [
-      0.08,
-      0.3,
-      0.52,
-      0.74
+    "burst": 0.78,
+    "whale": [
+      0.8,
+      2.35
     ],
+    "rings": 1.95,
+    "burstPower": 0.35
+  },
+  "whale": {
+    "at": 0.74,
+    "length": 1.45,
     "markAt": 1.06,
-    "kind": "water-drop"
+    "kind": "recorded-call",
+    "src": "whale-call-src.wav"
   },
   "cues": [
     {
@@ -44,11 +48,14 @@
       "dur": 1.986,
       "end": 4.586,
       "zh": "需要访问许可",
-      "en": "Access permission required.",
+      "en": "Access Permission Required",
+      "ru": "Требуется Разрешение На Доступ",
+      "ja": "アクセス許可が必要です",
       "text": {
         "zh": "需要访问许可",
         "en": "Access Permission Required",
-        "ru": "Требуется Разрешение На Доступ"
+        "ru": "Требуется Разрешение На Доступ",
+        "ja": "アクセス許可が必要です"
       }
     },
     {
@@ -63,11 +70,14 @@
       "dur": 1.65,
       "end": 6.763,
       "zh": "身份资料确认",
-      "en": "Identity verification.",
+      "en": "Identity Verification",
+      "ru": "Подтверждение Личности",
+      "ja": "ご身分の確認",
       "text": {
         "zh": "身份资料确认",
         "en": "Identity Verification",
-        "ru": "Подтверждение Личности"
+        "ru": "Подтверждение Личности",
+        "ja": "ご身分の確認"
       }
     },
     {
@@ -82,11 +92,14 @@
       "dur": 1.652,
       "end": 8.941,
       "zh": "接收访问需求",
-      "en": "Access request received.",
+      "en": "Access Request Received",
+      "ru": "Запрос На Доступ Принят",
+      "ja": "アクセス要求を承りました",
       "text": {
         "zh": "接收访问需求",
         "en": "Access Request Received",
-        "ru": "Запрос На Доступ Принят"
+        "ru": "Запрос На Доступ Принят",
+        "ja": "アクセス要求を承りました"
       }
     },
     {
@@ -101,11 +114,14 @@
       "dur": 1.358,
       "end": 10.826,
       "zh": "开始读取权限",
-      "en": "Permission read started.",
+      "en": "Permission Read Started",
+      "ru": "Начато Чтение Прав",
+      "ja": "権限の読み取りを開始",
       "text": {
         "zh": "开始读取权限",
         "en": "Permission Read Started",
-        "ru": "Начато Чтение Прав"
+        "ru": "Начато Чтение Прав",
+        "ja": "権限の読み取りを開始"
       }
     },
     {
@@ -120,11 +136,14 @@
       "dur": 2.776,
       "end": 14.129,
       "zh": "读取完毕，核验通过",
-      "en": "Read complete. Verification passed.",
+      "en": "Read Complete · Verified",
+      "ru": "Чтение Завершено. Проверка Пройдена",
+      "ja": "読み取り完了 · 確認済み",
       "text": {
         "zh": "读取完毕，核验通过",
         "en": "Read Complete · Verified",
-        "ru": "Чтение Завершено. Проверка Пройдена"
+        "ru": "Чтение Завершено. Проверка Пройдена",
+        "ja": "読み取り完了 · 確認済み"
       }
     },
     {
