@@ -18,9 +18,9 @@ dist/
 
 门禁：源目录与 dist 都 **PASS — 0 warning(s)（12 项）**。zip 条目已核（11 个包文件 + 两个安装物）。
 
-还没做：**git commit**、音色（mech 0.6）待用户拍板。
+**已提交并推上公开仓库**（`github.com/bigfatorangecatjohn/opening-free-0.21.0`，HEAD `0f0b066`）。还没做：音色（mech 0.6）待用户拍板、竖屏演示片、市场 PR #10363 等 CI/年龄闸门。
 
-演示片已按新间距重录重剪：`demo/dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB）与 `demo/dsh-opening-demo.mp4`（69.9 s / 14.5 MiB），四语硬切、带原声，管线 `tools/cut-demo-reels.py`。
+演示片已按新间距重录重剪：`demo/dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB，1880×1480）与 `demo/dsh-opening-demo.mp4`（69.9 s / 8.1 MiB，1600×1260 的 web 转码；1880×1480 母版留在本机 `demo/master-dsh-opening-demo.mp4`，已 gitignore），四语硬切、带原声，管线 `tools/cut-demo-reels.py`。
 
 **18:40 追加**：中文/日文的「欢迎回来，/ xxx」两行已下移并收紧——`is-zh` 类（`client.src.js` 约 1009–1023 的 `.dshop-cyber-lead/rule/name` line-height 1.12 / margin-top 4px / name line-height 1.04）+ `place()` 里 `cjkSalute` 分支（`reserve=54`、`drop=min(unit*0.02,22)`，约 2348–2350 行；reserve 先写 48，怕顶到进度条改 54），en/ru 不动。门禁 PASS。**18:47 用户点最大化后已重录 8 条 take 并重剪两条片**（成片量得环底→lead 约 38 px、两行间隙约 30 px）。外部改窗口尺寸（`SetWindowPos` / `ShowWindow` / `SC_MAXIMIZE` / Win+Up / 拖边框）全被进程截获，只能请用户点最大化；`capture-app.py` 的 `CAPTURE_MAXIMIZE` 已证明无效，别再加。
 
@@ -110,7 +110,7 @@ node tools\check-bundle.mjs dist\dsh-opening-free-0.21.0
 ## 6. 还没做（接手先看这里）
 
 1. **演示片（已重剪）**：`tools/cut-demo-reels.py` 从 `demo/raw-<key>.mp4` 八条原始录屏一次 concat 出 `demo/dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB）与 `demo/dsh-opening-demo.mp4`（69.9 s / 14.5 MiB）。对齐只认进度条百分比：简版 T=2.0 s 读、完整版 T=8.0 s 读粗窗再用每 1% 跳变做格点拟合（`.tmp/align-full.py`，残差约 ±20 ms）；本次 start 简版 zh 0.095 / en 0.471 / ru 0.245 / ja 0.172，完整版 zh 0.194 / en 0.172 / ru 0.289 / ja −0.105。画面 1880×1480 居中裁切，右上桌宠/reload toast 靠裁掉 x≥2240、右下浮动工具条用采样色块盖掉。raw/seg 与完整版 mp4 被 `.gitignore` 忽略。重录：`tools/capture-app.py`（`CAPTURE_LEAD=2.8`，简版 12 s、完整版 25 s，逐语自动 `build-client --force`，**录完必须重建默认**）。竖屏版仍未做；demo/dsh-opening-demo-share.mp4（8.9 MB）还是旧视觉的方形分享版，尚未重做。
-2. **git commit**：`README.md`、`assets/boot-*.{wav,ogg,sequence.json}`、`client.js`、`client.src.js`、`tools/build-boot-track.py`、`tools/build-client.mjs`、`tools/make-dist.mjs`、`package.json`、`locale/*.json`、`docs/40–43`；未跟踪：`HANDOFF.md`、`tools/make-whale-call.py`、`tools/_cyber_short.py`（一次性拼接器，可删）、根目录参考 `aac`（不要提交，版权）。
+2. **git**：0.21.0 已全部提交并推到公开仓库（`0f0b066`）。同提交把 `.env-backup/`（本机 profile 插件清单）与 `.ref/`（第三方插件源码副本）移出仓库、补 `LICENSE`（MIT）、补忽略规则（`.env-backup/`、`.ref/`、`*.aac`、`demo/master-*.mp4`、`demo/*.png`）、把文档里的本机用户名换成 `<你>`。**历史里仍留着** `.env-backup`、`.ref` 和 10.5 MB 参考 aac（`1610c69`）；要彻底清掉得重写历史 + force push（等用户点头）。
 3. **音色**：`--mech 0.6` 仍是当前值；朋友点评「太平太机械」。可选 mech 0.35 / 干净人声 / 换音色，等用户拍板。
 4. 旧短版（四声叮咚 + 欢迎语）已被 cyber 简版替换；旧 mode 名没变，设置里不会出现 12 张卡。
 
@@ -118,8 +118,8 @@ node tools\check-bundle.mjs dist\dsh-opening-free-0.21.0
 
 ## 7. 环境与坑
 
-- 工作区 `D:\DSH\Opening Design`，git 分支 `master`，HEAD `c3e5693`。
-- Python `.venv-tts\Scripts\python.exe`；ffmpeg `.tmp\ffmpeg\ffmpeg-9.0.2-essentials_build\bin\ffmpeg.exe`；参考鲸鸣是根目录 `【4K】你听过鲸歌吗？ P2 无bgm版本_544631700.aac`。
+- 工作区 `D:\DSH\Opening Design`，git 分支 `master`，HEAD `0f0b066`（与 origin/master 同步）。
+- Python `.venv-tts\Scripts\python.exe`；ffmpeg `.tmp\ffmpeg\ffmpeg-9.0.2-essentials_build\bin\ffmpeg.exe`；参考鲸鸣原片**不入库**（版权），衍生片段在 `samples/boot/whale-call-src.wav` 与 `assets/boot-*.ogg`。
 - 沙箱：node 子进程 `stdio:'pipe'` 会 EPERM（用 `inherit`）；`pwsh` 里 `... | Select-Object -First N` 会掐断上游；`cmd /c` 的输入重定向要写进 cmd 自己的命令串（`cmd /c "x.cmd <nul"`），PowerShell 不认 `<`；工作区 ACL 有 `DENY(DC)`，删文件用 node `fs.rmSync`。
 - 别删 `D:\DSH\_acl\`；不碰 profile 的 `.npmrc` 与业务文件；不手改 `client.js`。
 
