@@ -15,7 +15,7 @@
 | Junction | `<profile>\node_modules\dsh-opening-free` → `D:\DSH\Opening Design\plugin\dsh-opening` |
 | Python | `.venv-tts\Scripts\python.exe`（不要用系统 python） |
 | ffmpeg | `.tmp\ffmpeg\ffmpeg-9.0.2-essentials_build\bin\ffmpeg.exe` |
-| 参考鲸鸣 | 工作区根目录的 `【4K】你听过鲸歌吗？ P2 无bgm版本_544631700.aac` |
+| 参考鲸鸣 | 本机工作区根目录的 `【4K】你听过鲸歌吗？ P2 无bgm版本_544631700.aac`（版权归原片，**不入库**；仓库里只有衍生片段 `samples/boot/whale-call-src.wav` 与 `assets/boot-*.ogg`，换采样才需要原片） |
 | 装前门禁 | `node tools\check-bundle.mjs <bundle-dir>`，必须 `PASS — 0 warning(s)` |
 
 硬规则：只改 `client.src.js` 再构建；不手改 `client.js`；不新增运行时依赖；不碰 profile 的 `.npmrc` 与业务文件；视觉验证只在用户已登录的页面上做。

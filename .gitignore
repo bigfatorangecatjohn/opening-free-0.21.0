@@ -24,6 +24,14 @@ tmp*/
 demo/raw-*.mp4
 demo/seg-*.mp4
 demo/concat.txt
-demo/dsh-opening-demo.mp4
+demo/master-*.mp4
 demo/concat-short.txt
 Demo/seg-*-short.mp4
+demo/*.png
+
+# 本机环境备份与第三方参考副本：只在本地留档，不随插件发布
+.env-backup/
+.ref/
+
+# 用户提供的参考音轨：版权归原片，不入库（只用它的衍生片段）
+*.aac

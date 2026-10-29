@@ -53,7 +53,7 @@ plugin/dsh-opening/     运行包（装进 profile 的就是它）
 tools/                  音频/客户端/检查/出包脚本
 docs/                   环境、语音、手册与 SOP
 samples/                TTS 样音与每轮母版
-demo/                   演示片：四语简版 15 s / 完整版 70 s（带原声）
+demo/                   演示片：四语简版 15.0 s / 四语完整版 69.9 s（带原声，已入库）
 dist/                   分发包：文件夹 + 傻瓜 zip
 ```
 
@@ -83,7 +83,7 @@ node tools\make-dist.mjs
 
 数据流：`assets/boot-*.wav` + `*.sequence.json` → `build-client.mjs` 读 `ogg` 与 `sequence.json` → 生成 `client.js` 头部的 `__DSH_OPENING_SET__`（八条 cue）。**时间轴的真源是 `sequence.json`，不是手写常量**。
 
-演示片：`tools\capture-app.py` 逐语录屏（`CAPTURE_LEAD=2.8`，简版 12 s / 完整版 25 s；录前自动 `build-client.mjs --force <key>`，**录完必须重建默认**；窗口要先由用户点最大化——外部 `SetWindowPos`/`ShowWindow` 会被进程拦掉），再 `tools\cut-demo-reels.py both` 对齐、居中裁切、mux 原声，产出 `demo\dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB）与 `demo\dsh-opening-demo.mp4`（69.9 s / 14.5 MiB）。对齐只认一个锚点：画面底部百分比（简版读 T=2.0 s、完整版读 T=8.0 s，再取整段；`start = 帧时间 − 百分比 × span`，残差约 ±20 ms）。
+演示片：`tools\capture-app.py` 逐语录屏（`CAPTURE_LEAD=2.8`，简版 12 s / 完整版 25 s；录前自动 `build-client.mjs --force <key>`，**录完必须重建默认**；窗口要先由用户点最大化——外部 `SetWindowPos`/`ShowWindow` 会被进程拦掉），再 `tools\cut-demo-reels.py both` 对齐、居中裁切、mux 原声，产出 `demo\dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB）与 `demo\dsh-opening-demo.mp4`（69.9 s；1880×1480 母版约 14.5 MiB，留在本机 `demo\master-dsh-opening-demo.mp4`，不进库；入库的是 1600×1260 / 8.1 MiB 的 web 转码）。对齐只认一个锚点：画面底部百分比（简版读 T=2.0 s、完整版读 T=8.0 s，再取整段；`start = 帧时间 − 百分比 × span`，残差约 ±20 ms）。
 
 ## 验证
 
@@ -121,4 +121,4 @@ node tools\make-dist.mjs
 
 ## 许可
 
-代码本工程原创，MIT 精神自由使用。音色：Kokoro-82M（Apache-2.0，中/英/日）、Silero v5（CC BY-NC-SA，俄）。鲸鸣采样取自用户提供的参考片音轨，仅作同人自用。视觉参考红警 3 / 命令与征服 3 的 E.V.A 终端气质与流浪地球 2 的粒子线条。
+代码本工程原创，按仓库根的 [LICENSE](LICENSE)（MIT）自由使用。音色：Kokoro-82M（Apache-2.0，中/英/日）、Silero v5（CC BY-NC-SA，俄）。鲸鸣采样取自用户提供的参考片音轨，仅作同人自用。视觉参考红警 3 / 命令与征服 3 的 E.V.A 终端气质与流浪地球 2 的粒子线条。
