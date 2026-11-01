@@ -126,12 +126,12 @@ node tools\check-bundle.mjs plugin\dsh-opening
 ### 5.2 分发给别人
 
 1. `node tools\make-dist.mjs`（§7）。
-2. 把 zip 传到 GitHub Release（`gh release upload v<版本> dist\dsh-opening-free-0.21.0.zip`），把 Release 链接给对方——`dist/` 已被 `.gitignore` 排除，不要提交；对方解压、双击 `安装.cmd`、按 §5.3 操作。
+2. 把 zip 传到 GitHub Release（`gh release upload v<版本> dist\dsh-opening-free-0.21.1.zip`），把 Release 链接给对方——`dist/` 已被 `.gitignore` 排除，不要提交；对方解压、双击 `安装.cmd`、按 §5.3 操作。
 3. 不想用 `安装.cmd` 也可以直接读 `安装说明.txt`。
 
 ### 5.3 宿主侧安装（人操作）
 
-设置 → 插件 → 安装本地插件（bundle）→ 选中 `dsh-opening-free-0.21.0` **文件夹** → 等 `applied` → Ctrl+R。
+设置 → 插件 → 安装本地插件（bundle）→ 选中 `dsh-opening-free-0.21.1` **文件夹** → 等 `applied` → Ctrl+R。
 
 **判据**：宿主行 `application: applied`；`shell.overlay` 的 occupants 出现 `dsh-opening-free`（order -1000）；刷新后序列播完不留 DOM。
 
@@ -142,7 +142,7 @@ node tools\check-bundle.mjs plugin\dsh-opening
 ## 6. 验证
 
 1. **源目录门禁**：`node tools\check-bundle.mjs plugin/dsh-opening` → PASS 12 项。
-2. **dist 门禁**：`node tools\check-bundle.mjs dist/dsh-opening-free-0.21.0` → PASS。
+2. **dist 门禁**：`node tools\check-bundle.mjs dist/dsh-opening-free-0.21.1` → PASS。
 3. **时间轴**：解 banner：
    ```powershell
    node -e "const fs=require('fs');const line=fs.readFileSync('plugin/dsh-opening/client.js','utf8').split('\n')[1];const set=JSON.parse(line.match(/__DSH_OPENING_SET__ = (\[.*\]);/)[1]);for(const e of set)console.log(e.key, e.cue.total, e.cue.salute&&e.cue.salute.at, e.cue.phases&&e.cue.phases.name);"
@@ -162,22 +162,22 @@ node tools\make-dist.mjs
 
 ```
 dist/
-  dsh-opening-free-0.21.0/          安装时选这个文件夹
+  dsh-opening-free-0.21.1/          安装时选这个文件夹
     package.json  cordis.patch.yml  index.js  client.js  icon.svg
     locale/  README.md  INSTALL.md  FOR-AI.md  SOP.md
   安装.cmd                         双击：复制路径 + 打印步骤（不改文件）
   安装说明.txt                     同样的说明，纯文本
-  dsh-opening-free-0.21.0.zip       上面三者打包，交给别人
+  dsh-opening-free-0.21.1.zip       上面三者打包，交给别人
 ```
 
 zip 走 GitHub Release，不进仓库（`dist/` 已 gitignore）。Release 同时挂四语完整版演示片（`demo\master-dsh-opening-demo.mp4`，1880×1480，约 14.5 MiB）。
 
 **判据**：
 
-1. `node tools\check-bundle.mjs dist/dsh-opening-free-0.21.0` → PASS。
+1. `node tools\check-bundle.mjs dist/dsh-opening-free-0.21.1` → PASS。
 2. zip 体积约 1 MiB（`client.js` 约 900 KiB 占大头）。
 3. 解压到一个干净目录，双击 `安装.cmd`，确认它能找到文件夹并把路径写进剪贴板。
-4. 把 zip 里的 `dsh-opening-free-0.21.0` 当成全新包走一遍 §5.3（可选，最稳）。
+4. 把 zip 里的 `dsh-opening-free-0.21.1` 当成全新包走一遍 §5.3（可选，最稳）。
 
 ---
 

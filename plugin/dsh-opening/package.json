@@ -1,6 +1,6 @@
 {
   "name": "dsh-opening-free",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "private": true,
   "type": "module",
   "description": "Boot animation stage for DeepSeek Harness — a full-frame power-on sequence mounted in shell.overlay.",
@@ -20,7 +20,9 @@
     "assets/*.json",
     "assets/*.png",
     "locale/*.json",
-    "icon.svg"
+    "icon.svg",
+    "screenshots.json",
+    "screenshots/*.jpg"
   ],
   "dsh": {
     "bundle": {

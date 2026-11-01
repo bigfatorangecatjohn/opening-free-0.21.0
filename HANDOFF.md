@@ -1,4 +1,4 @@
-# 任务交接单 — 开机动画 Free（0.21.0，2026-10-29）
+# 任务交接单 — 开机动画 Free（0.21.1，2026-11-01）
 
 给下一个会话的自己读。旧版交接单（3.3–3.5 s、视觉未动的那一版）已被本文件取代。
 
@@ -6,25 +6,25 @@
 
 ## 0. 一句话现状
 
-**0.21.0 封包了**：八种模式（四语 × 完整 18 s / 简版 3.8–4.5 s）全走同一条 cyber 管线，四份文档写完，傻瓜封包已出。版本从 0.2.0 抬到 0.21.0（用户 19:10 指令「封最新一版傻瓜包，版本 v0.21」）；`make-dist.mjs` 已按旧版本号清掉 `dist/dsh-opening-free-0.2.0*`，dist 里只留一版。
+**0.21.1 封包了（2026-11-01，脱敏版）**：八种模式（四语 × 完整 18 s / 简版 3.8–4.5 s）全走同一条 cyber 管线，四份文档写完，傻瓜封包已出。这一版只动文档与市场物料：`client.js` 与 0.21.0 逐字节相同（构建后 git 无差异）；去掉文档里的真名与 Windows SID、统一 `<你>` 占位、修掉过期数字、补市场截图（`screenshots.json` + 3 张 1600 px JPG）。版本从 0.2.0 抬到 0.21.0（用户 19:10 指令「封最新一版傻瓜包，版本 v0.21」）；`make-dist.mjs` 已按旧版本号清掉 `dist/dsh-opening-free-0.2.0*`，dist 里只留一版。
 
 ```
 dist/
-  dsh-opening-free-0.21.0/        929.7 KiB（安装时选这个文件夹）
-  dsh-opening-free-0.21.0.zip     641.1 KiB（656,487 B，交付物）
+  dsh-opening-free-0.21.1/        930.3 KiB（952,667 B；安装时选这个文件夹）
+  dsh-opening-free-0.21.1.zip     641.5 KiB（656,861 B，交付物）
   安装.cmd                       1,412 B
   安装说明.txt                   1,163 B
 ```
 
 门禁：源目录与 dist 都 **PASS — 0 warning(s)（12 项）**。zip 条目已核（11 个包文件 + 两个安装物）。
 
-**已提交并推上公开仓库**（`github.com/bigfatorangecatjohn/opening-free-0.21.0`，HEAD `5299cca`；安装 zip 与完整版演示片在 [Release v0.21.0](https://github.com/bigfatorangecatjohn/opening-free-0.21.0/releases/tag/v0.21.0)）。还没做：音色（mech 0.6）待用户拍板、竖屏演示片、市场 PR #10363 等 CI/年龄闸门。
+**已提交并推上公开仓库**（`github.com/bigfatorangecatjohn/opening-free-0.21.0`，HEAD 以 `git log -1 --oneline` 为准；安装 zip 与完整版演示片在 [Release v0.21.1](https://github.com/bigfatorangecatjohn/opening-free-0.21.0/releases/tag/v0.21.1)）。还没做：音色（mech 0.6）待用户拍板、竖屏演示片。市场条目已收录：PR #10363 于 2026-10-31T17:09:26Z 合并（详情页 https://awesome-dsh-plugin.com/p/bigfatorangecatjohn/opening-free-0.21.0--plugin-dsh-opening/ ）。
 
-演示片已按新间距重录重剪：`demo/dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB，1880×1480，入库）与四语完整版 69.9 s（1880×1480 母版 `demo/master-dsh-opening-demo.mp4` 只在本机、现挂 Release v0.21.0，不入库），四语硬切、带原声，管线 `tools/cut-demo-reels.py`。
+演示片已按新间距重录重剪：`demo/dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB，1880×1480，入库）与四语完整版 69.9 s（1880×1480 母版 `demo/master-dsh-opening-demo.mp4` 只在本机、现挂 Release v0.21.1，不入库），四语硬切、带原声，管线 `tools/cut-demo-reels.py`。
 
 **18:40 追加**：中文/日文的「欢迎回来，/ xxx」两行已下移并收紧——`is-zh` 类（`client.src.js` 约 1009–1023 的 `.dshop-cyber-lead/rule/name` line-height 1.12 / margin-top 4px / name line-height 1.04）+ `place()` 里 `cjkSalute` 分支（`reserve=54`、`drop=min(unit*0.02,22)`，约 2348–2350 行；reserve 先写 48，怕顶到进度条改 54），en/ru 不动。门禁 PASS。**18:47 用户点最大化后已重录 8 条 take 并重剪两条片**（成片量得环底→lead 约 38 px、两行间隙约 30 px）。外部改窗口尺寸（`SetWindowPos` / `ShowWindow` / `SC_MAXIMIZE` / Win+Up / 拖边框）全被进程截获，只能请用户点最大化；`capture-app.py` 的 `CAPTURE_MAXIMIZE` 已证明无效，别再加。
 
-**20:10 追加（用户「彻底清，瘦身，重新出包」）**：仓库从 20.6 MB 瘦到 ~6 MB 的工作树——`plugin/dsh-opening/assets/*.wav`（8 个母版，4.03 MB）、`demo/dsh-opening-demo.mp4`（8.5 MB 完整版 web 转码）、`dist/`（1.54 MB）全部 `git rm --cached` 并写进 `.gitignore`，本地文件保留；完整版演示片与安装 zip 改走 GitHub Release。历史里的 `.env-backup/`（本机 profile 插件清单）、`.ref/`（第三方插件源码副本）、根目录参考 aac、wav 母版、完整版 mp4、dist 用 `git-filter-repo`（`.tmp/filter-repo/git-filter-repo.py`，沙箱里 sh 被拦、filter-branch 跑不了）重写后 force push（**所有 commit SHA 因此变化**）。但 GitHub 仍能按旧 SHA 取到被删对象（实测 `2613c54` / `1610c69` 的树里 `.env-backup/`、`.ref/`、aac 仍在，API 直接可读），所以又做了一次彻底迁移：旧仓库改名 `opening-free-0.21.0-archive` 并**转为 private**（匿名 `git ls-remote` 现在要认证）；用户改了用户名，现账号 `bigfatorangecatjohn`（旧账号已隐去），在同名 `bigfatorangecatjohn/opening-free-0.21.0` 下**新建公开仓库**，把重写后的 33 个提交从零对象库推上去——新仓库从未存过这些文件。结果：远端工作树 **56 个 blob / 6,825,693 B**（原 20.6 MB），本地 pack 25.1 MiB（历史里历次 `client.js` 生成物，属正常）；`git remote` 已重新指向新仓库。新仓库 created_at `2026-10-29T12:14:42Z`（北京 20:14），市场年龄闸门因此顺延到 `2026-10-30 20:14`。Release v0.21.0 在新仓库重建，挂 `dsh-opening-free-0.21.0.zip`（656,842 B）与 `master-dsh-opening-demo.mp4`（15,176,593 B）。
+**20:10 追加（用户「彻底清，瘦身，重新出包」）**：仓库从 20.6 MB 瘦到 ~6 MB 的工作树——`plugin/dsh-opening/assets/*.wav`（8 个母版，4.03 MB）、`demo/dsh-opening-demo.mp4`（8.5 MB 完整版 web 转码）、`dist/`（1.54 MB）全部 `git rm --cached` 并写进 `.gitignore`，本地文件保留；完整版演示片与安装 zip 改走 GitHub Release。历史里的 `.env-backup/`（本机 profile 插件清单）、`.ref/`（第三方插件源码副本）、根目录参考 aac、wav 母版、完整版 mp4、dist 用 `git-filter-repo`（`.tmp/filter-repo/git-filter-repo.py`，沙箱里 sh 被拦、filter-branch 跑不了）重写后 force push（**所有 commit SHA 因此变化**）。但 GitHub 仍能按旧 SHA 取到被删对象（实测 `2613c54` / `1610c69` 的树里 `.env-backup/`、`.ref/`、aac 仍在，API 直接可读），所以又做了一次彻底迁移：旧仓库改名 `opening-free-0.21.0-archive` 并**转为 private**（匿名 `git ls-remote` 现在要认证）；现账号 `bigfatorangecatjohn`，在同名 `bigfatorangecatjohn/opening-free-0.21.0` 下**新建公开仓库**，把重写后的 34 个提交从零对象库推上去——新仓库从未存过这些文件。结果：远端工作树 **56 个 blob / 6,826,146 B**（原 20.6 MB），本地 pack 25.1 MiB（历史里历次 `client.js` 生成物，属正常）；`git remote` 已重新指向新仓库。新仓库 created_at `2026-10-29T12:14:42Z`（北京 20:14），市场年龄闸门因此顺延到 `2026-10-30 20:14`。Release v0.21.0 在新仓库重建，挂 `dsh-opening-free-0.21.0.zip`（656,842 B）与 `master-dsh-opening-demo.mp4`（15,176,593 B）。
 
 ---
 
@@ -93,7 +93,7 @@ dist/
 node tools\build-client.mjs
 node tools\check-bundle.mjs plugin\dsh-opening
 node tools\make-dist.mjs
-node tools\check-bundle.mjs dist\dsh-opening-free-0.21.0
+node tools\check-bundle.mjs dist\dsh-opening-free-0.21.1
 ```
 
 体积参考：client.js 899.5 KiB；zip 641.1 KiB。再多一条完整版音轨约 +25 KiB（ogg）。
@@ -103,7 +103,7 @@ node tools\check-bundle.mjs dist\dsh-opening-free-0.21.0
 ## 5. 装 / 验收
 
 - **本机**：profile 里 `node_modules\dsh-opening-free` 是指向本仓库的 **Junction**，改完 `client.js` 让用户 **Ctrl+R** 即可，不需要装包。
-- **给别人**：`dist\dsh-opening-free-0.21.0.zip` → 解压 → 双击 `安装.cmd`（路径进剪贴板）→ 设置 → 插件 → 安装本地插件（bundle）→ 选 `dsh-opening-free-0.21.0` **文件夹** → 等 `applied` → Ctrl+R。
+- **给别人**：`dist\dsh-opening-free-0.21.1.zip` → 解压 → 双击 `安装.cmd`（路径进剪贴板）→ 设置 → 插件 → 安装本地插件（bundle）→ 选 `dsh-opening-free-0.21.1` **文件夹** → 等 `applied` → Ctrl+R。
 - 机械验证：源门禁 + dist 门禁 + banner 解码（8 条 cue）+ `.tmp/full-check.cjs`（stub React 跑组件树，核对步骤条数/队列顺序）。
 - 视觉验证只能在用户已登录页面做。不另起浏览器、不截 mock 页。
 
@@ -112,15 +112,16 @@ node tools\check-bundle.mjs dist\dsh-opening-free-0.21.0
 ## 6. 还没做（接手先看这里）
 
 1. **演示片（已重剪）**：`tools/cut-demo-reels.py` 从 `demo/raw-<key>.mp4` 八条原始录屏一次 concat 出 `demo/dsh-opening-demo-short.mp4`（15.0 s / 4.7 MiB，入库）与完整版 69.9 s（1880×1480 母版约 14.5 MiB，随 Release 发、不入库）。对齐只认进度条百分比：简版 T=2.0 s 读、完整版 T=8.0 s 读粗窗再用每 1% 跳变做格点拟合（`.tmp/align-full.py`，残差约 ±20 ms）；本次 start 简版 zh 0.095 / en 0.471 / ru 0.245 / ja 0.172，完整版 zh 0.194 / en 0.172 / ru 0.289 / ja −0.105。画面 1880×1480 居中裁切，右上桌宠/reload toast 靠裁掉 x≥2240、右下浮动工具条用采样色块盖掉。raw/seg 与完整版 mp4 被 `.gitignore` 忽略。重录：`tools/capture-app.py`（`CAPTURE_LEAD=2.8`，简版 12 s、完整版 25 s，逐语自动 `build-client --force`，**录完必须重建默认**）。竖屏版仍未做；demo/dsh-opening-demo-share.mp4（8.9 MB）还是旧视觉的方形分享版，尚未重做。
-2. **git**：0.21.0 已全部提交并推到公开仓库（`0f0b066`）。同提交把 `.env-backup/`（本机 profile 插件清单）与 `.ref/`（第三方插件源码副本）移出仓库、补 `LICENSE`（MIT）、补忽略规则（`.env-backup/`、`.ref/`、`*.aac`、`demo/master-*.mp4`、`demo/*.png`）、把文档里的本机用户名换成 `<你>`。**历史里仍留着** `.env-backup`、`.ref` 和 10.5 MB 参考 aac（`1610c69`）；要彻底清掉得重写历史 + force push（等用户点头）。
+2. **git**：0.21.1 已全部提交并推到公开仓库（HEAD 以 `git log -1` 为准）。历史已在 2026-10-29 的迁库中重建：`.env-backup/`、`.ref/`、参考 aac、wav 母版、完整版 mp4、`dist/` 都不在新仓库历史里；旧库已转 private。文档里的本机用户名统一写成 `<你>`，真名与 SID 已在 0.21.1 去掉。
 3. **音色**：`--mech 0.6` 仍是当前值；朋友点评「太平太机械」。可选 mech 0.35 / 干净人声 / 换音色，等用户拍板。
 4. 旧短版（四声叮咚 + 欢迎语）已被 cyber 简版替换；旧 mode 名没变，设置里不会出现 12 张卡。
+5. **市场物料**：详情页已上线；截图在 `plugin/dsh-opening/screenshots.json`（相对路径，1–8 张），下次 nightly 构建自动生效。改描述/分类才需要重开 PR。
 
 ---
 
 ## 7. 环境与坑
 
-- 工作区 `D:\DSH\Opening Design`，git 分支 `master`，HEAD `0f0b066`（与 origin/master 同步）。
+- 工作区 `D:\DSH\Opening Design`，git 分支 `master`，HEAD 以 `git log -1 --oneline` 为准（与 origin/master 同步）。
 - Python `.venv-tts\Scripts\python.exe`；ffmpeg `.tmp\ffmpeg\ffmpeg-9.0.2-essentials_build\bin\ffmpeg.exe`；参考鲸鸣原片**不入库**（版权），衍生片段在 `samples/boot/whale-call-src.wav` 与 `assets/boot-*.ogg`。
 - 沙箱：node 子进程 `stdio:'pipe'` 会 EPERM（用 `inherit`）；`pwsh` 里 `... | Select-Object -First N` 会掐断上游；`cmd /c` 的输入重定向要写进 cmd 自己的命令串（`cmd /c "x.cmd <nul"`），PowerShell 不认 `<`；工作区 ACL 有 `DENY(DC)`，删文件用 node `fs.rmSync`。
 - 别删 `D:\DSH\_acl\`；不碰 profile 的 `.npmrc` 与业务文件；不手改 `client.js`。
@@ -130,7 +131,7 @@ node tools\check-bundle.mjs dist\dsh-opening-free-0.21.0
 ## 8. 用户口径里容易丢的几条
 
 - 舞台是**浅纸色**（`#f7f8fa`），不是暗色赛博；所有高光用蓝墨实色，不能用 `lighter`。
-- 鲸鱼最终是**黑色** logo（用户明确要求），银色只做边缘辉光与光晕，且已经比第一版**压暗 15%**（用户说"银辉过头"）。
+- 鲸鱼最终是**墨黑** logo（`#141922`→`#030508`，用户要的"黑色"），蓝紫轮廓光只做边缘，且已比第一版**压暗 15%**（用户说"银辉过头"）。
 - 简版鲸鱼**不隐去**（曾试过名字落定时淡出，被否）；也**不旋转**（曾试过整圈滚转，被否）。
 - 用户否掉的音效：`stream_sweep` 的滑音「咻—biu」、`burst_impact` 的爆破「啪」、`name_boom` 的低频爆裂。都不要加回来。
 - 文案要庄重：称呼字距收束 + 蓝光，日/俄/英字号单独调过（`LEAD_TRACK/NAME_TRACK` 与 `.is-ru/.is-en/.is-ja`）。

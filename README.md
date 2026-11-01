@@ -2,20 +2,29 @@
 
 给 DeepSeek Harness 桌面版做的一套**开机动画**：页面第一次绘制时，整帧铺开一段序列，播完自己退场，不留 DOM。
 
-一道蓝色数据流像水一样扫过，浪头炸开，鲸鸣里游来一头由光点聚成的虎鲸，凝固成黑色 DeepSeek 鲸鱼，全息圆环旋转呼吸，最后浮出「欢迎回来，指挥员」。底下一条蓝色呼吸灯竖线走到 100%。
+一道蓝色数据流像水一样扫过，浪头炸开，鲸鸣里游来一头由光点聚成的虎鲸，凝固成墨黑 DeepSeek 鲸鱼（蓝紫轮廓光），全息圆环旋转呼吸，最后浮出「欢迎回来，指挥员」。底下一条蓝色呼吸灯竖线走到 100%。
 
-- 包名 `dsh-opening-free`　版本 `0.21.0`
+- 包名 `dsh-opening-free`　版本 `0.21.1`
 - 形态：DSH 客户端插件（bundle），挂在 `shell.overlay` 整帧浮层，click-through
 - 八种模式：四种语言 × 完整版 18 s / 简版 3.8–4.5 s
 - 全部资源（八条音轨 + 鲸鱼图 + 时间轴）内联在 `client.js`，运行时零请求
 - 下载：安装 zip 与四语完整版演示片在 [GitHub Releases](https://github.com/bigfatorangecatjohn/opening-free-0.21.0/releases/latest)
+- 市场：DSH Market 已收录（分类 UI），截图见下
+
+## 截图
+
+![数据流扫过屏幕](plugin/dsh-opening/screenshots/01-wave.jpg)
+
+![鲸鱼在圆环中凝固](plugin/dsh-opening/screenshots/02-whale.jpg)
+
+![欢迎回来，指挥员](plugin/dsh-opening/screenshots/03-salute.jpg)
 
 ## 现在长什么样
 
 **简版三拍**（中 / 英 / 俄 / 日各一条，四条的称呼都落在同一拍 `1.62 s`）：
 
 1. **0 – 0.52 s 数据流**：一道蓝色水带从左扫过屏幕，单层碎浪（约 620 颗浪体粒子 + 230 颗浪脊 + 44 颗飞溅），浪头带卷唇与光晕。
-2. **0.52 s 炸开 → 0.58 – 2.03 s 鲸鱼**：一声很轻的低频垫音（没有冲击爆点），冲击环 + 火花散开；鲸鸣里约 1800 颗光点从爆点汇聚成虎鲸轮廓，游到中心后凝固成**黑色** DeepSeek 鲸鱼，常驻在圆环里。
+2. **0.52 s 炸开 → 0.58 – 2.03 s 鲸鱼**：一声很轻的低频垫音（没有冲击爆点），冲击环 + 火花散开；鲸鸣里约 1800 颗光点从爆点汇聚成虎鲸轮廓，游到中心后凝固成**墨黑**（`#141922`→`#030508`）DeepSeek 鲸鱼，蓝紫轮廓光，常驻在圆环里。
 3. **1.06 s 圆环 → 1.62 s 问候**：三层全息散点圆环（96 / 72 / 120 点）逐点浮现、旋转、按 0.32 Hz 呼吸；底部 44 根竖线呼吸灯 + 百分比数字从 0% 走到 100%；「欢迎回来，」与「指挥员」两行先后落在**圆环下方**（中文/日文行距收紧，正中/英/俄仍更松），称呼带蓝光与字距收束。
 
 **完整版 18 s**：同样的开场（鲸鸣 0.74 s 先过场，mark 在它的尾音里浮现），中间五步访问协议逐条浮现在圆环下方，念完一句再换下一句；收尾是同一句问候。底下垫一层 Am–F–C–G 电音床，人声出现时自动压低。完整版每 4.6 s 有一道很淡的扫描线保活。
@@ -89,14 +98,14 @@ node tools\make-dist.mjs
 ## 验证
 
 1. `node tools\check-bundle.mjs plugin\dsh-opening` → `PASS — 0 warning(s)`（12 项）。
-2. 出包后对 dist 再跑一次门禁：`node tools\check-bundle.mjs dist\dsh-opening-free-0.21.0`。
+2. 出包后对 dist 再跑一次门禁：`node tools\check-bundle.mjs dist\dsh-opening-free-0.21.1`。
 3. 视觉验证**只能**在用户自己已登录的 DSH 页面上做：`C:\Users\<你>\.dsh\profiles\desktop\node_modules\dsh-opening-free` 是指向本仓库的 Junction，改完 `client.js` 按 Ctrl+R 即生效。按技能红线：不另起浏览器、不截 mock 页、不写渲染器补偿。
 4. 队列/时间轴这类看不见的逻辑，用 `.tmp\full-check.cjs` 一类的桩 DOM 脚本跑构建产物（stub React + vm）核对。
 
 ## 装 / 卸
 
 - **本机开发**：profile 里是 Junction，直接 Ctrl+R。
-- **发给别人**：从 [Releases](https://github.com/bigfatorangecatjohn/opening-free-0.21.0/releases/latest) 下载 `dsh-opening-free-0.21.0.zip`（仓库里没有 zip，`dist/` 是本地生成物）。解压后双击 `安装.cmd`（它把文件夹路径放进剪贴板），然后 设置 → 插件 → 安装本地插件（bundle）→ 选中 `dsh-opening-free-0.21.0` 文件夹 → 等 `applied` → Ctrl+R。细节见 `docs/42-install.md`。
+- **发给别人**：从 [Releases](https://github.com/bigfatorangecatjohn/opening-free-0.21.0/releases/latest) 下载 `dsh-opening-free-0.21.1.zip`（仓库里没有 zip，`dist/` 是本地生成物）。解压后双击 `安装.cmd`（它把文件夹路径放进剪贴板），然后 设置 → 插件 → 安装本地插件（bundle）→ 选中 `dsh-opening-free-0.21.1` 文件夹 → 等 `applied` → Ctrl+R。细节见 `docs/42-install.md`。
 - **卸载**：设置 → 插件 → `dsh-opening-free` → 卸载，刷新恢复原样。
 
 ## 已知限制
